@@ -1,0 +1,71 @@
+{
+  "$schema": "./manifest.schema.json",
+  "schema_version": "1.2",
+  "policy": {
+    "code_license_applies_to_assets": false,
+    "public_browser_delivery_is_redistribution": true,
+    "default_renderer": "licensed_glb_with_static_fallback",
+    "use_scope": "local_noncommercial_fan_project"
+  },
+  "slots": [
+    {
+      "slot_id": "visible_orchestrator",
+      "agent_id": "career_coordinator",
+      "role": { "en": "Visible orchestrator", "es": "Orquestadora visible" },
+      "requested_identity": {
+        "name": "Watson Amelia",
+        "group": "hololive English -Myth-",
+        "mapping_scope": "visual_orchestrator_only"
+      },
+      "status": "included_local_noncommercial",
+      "publishable": true,
+      "asset": {
+        "path": "frontend/public/models/ame-terrarium.glb",
+        "runtime_uri": "/models/ame-terrarium.glb",
+        "original_filename": "smol_ame_in_an_upcycled_terrarium_hololiveen.glb",
+        "format": "glb",
+        "bytes": 4021460,
+        "sha256": "e794eea8b5e788e394692e8a87e5ca101b220714e51547cc75eb6d37d579a42e",
+        "generator": "Sketchfab-12.66.0",
+        "unmodified_copy": true,
+        "animation_clips": ["Animation"],
+        "animation_duration_seconds": 9.0
+      },
+      "license_gate": {
+        "evidence": {
+          "author_or_rightsholder": "Seafoam",
+          "original_source_url": "https://sketchfab.com/3d-models/smol-ame-in-an-upcycled-terrarium-hololiveen-490cecc249d242188fda5ad3160a4b24",
+          "license_name_and_version": "CC BY 4.0",
+          "license_text_or_permalink": "https://creativecommons.org/licenses/by/4.0/",
+          "retrieval_date": "2026-08-21",
+          "proof_of_acquisition": "User-provided GLB; author, source URL, title and license are embedded in asset.extras.",
+          "attribution_text": "Smol Ame in an Upcycled Terrarium by Seafoam, licensed CC BY 4.0.",
+          "permission_to_modify": true,
+          "permission_to_redistribute_browser_downloadable_glb": "allowed_with_attribution",
+          "mesh_texture_rig_animation_provenance": "Single embedded Sketchfab GLB supplied by the user; no external files.",
+          "conversion_log": "Copied byte-for-byte into frontend/public/models; SHA-256 retained.",
+          "trademark_and_likeness_review": "Unofficial noncommercial fan work; COVER fan-work guidelines also apply."
+        },
+        "required_fields": [
+          "author_or_rightsholder",
+          "original_source_url",
+          "license_name_and_version",
+          "license_text_or_permalink",
+          "retrieval_date",
+          "proof_of_acquisition",
+          "attribution_text",
+          "permission_to_modify",
+          "permission_to_redistribute_browser_downloadable_glb",
+          "mesh_texture_rig_animation_provenance",
+          "conversion_log",
+          "trademark_and_likeness_review"
+        ]
+      },
+      "fallback": {
+        "kind": "static_svg",
+        "path": "frontend/public/models/ame-terrarium-poster.svg",
+        "runtime_uri": "/models/ame-terrarium-poster.svg"
+      }
+    }
+  ]
+}
