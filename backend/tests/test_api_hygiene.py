@@ -6,9 +6,10 @@ import time
 from typing import ClassVar
 
 import httpx
-import job_orchestrator.api as api_module
 from conftest import wait_for_run
 from fastapi.testclient import TestClient
+
+import job_orchestrator.api as api_module
 
 
 class FakeDeepSeekClient:

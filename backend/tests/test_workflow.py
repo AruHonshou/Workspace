@@ -1,3 +1,6 @@
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import Command
+
 from job_orchestrator.schemas import AgentRole, Artifact, Claim
 from job_orchestrator.workflow import (
     build_graph,
@@ -6,8 +9,6 @@ from job_orchestrator.workflow import (
     synthetic_jobs,
     synthetic_profile,
 )
-from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.types import Command
 
 
 def test_state_graph_runs_all_five_roles_offline() -> None:

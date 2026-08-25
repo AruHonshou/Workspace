@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import httpx
 import pytest
+
 from job_orchestrator.config import Settings
 from job_orchestrator.theirstack import (
     TheirStackClient,

@@ -4,6 +4,8 @@ import time
 from datetime import timedelta
 
 from conftest import wait_for_run
+from pypdf import PdfReader
+
 from job_orchestrator.career import (
     build_deep_analysis,
     cloud_safe_verified_facts,
@@ -12,7 +14,6 @@ from job_orchestrator.career import (
 )
 from job_orchestrator.ranking import normalize_job
 from job_orchestrator.schemas import SourceKind, utc_now
-from pypdf import PdfReader
 
 
 def _profile(client):

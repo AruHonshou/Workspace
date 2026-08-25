@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from threading import BoundedSemaphore
 from time import sleep
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -93,7 +93,7 @@ class ReviewerProposal(_StrictProposal):
     observations: list[ReviewerObservationProposal] = Field(default_factory=list, max_length=20)
 
 
-StructuredRoleOutput: TypeAlias = (
+type StructuredRoleOutput = (
     CoordinatorProposal
     | ScoutProposal
     | FitAnalystProposal

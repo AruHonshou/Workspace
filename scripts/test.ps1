@@ -35,13 +35,13 @@ if (-not $SkipBackend) {
     Assert-LastExitCode 'Backend tests'
 
     if (-not $Quick) {
-        & $venvPython -c 'import ruff' 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            & $venvPython -m ruff check (Join-Path $repoRoot 'backend')
+        Push-Location (Join-Path $repoRoot 'backend')
+        try {
+            & $venvPython -m ruff check .
             Assert-LastExitCode 'Backend lint'
         }
-        else {
-            Write-Host 'Backend lint skipped: Ruff is not declared by backend[ test ].' -ForegroundColor Yellow
+        finally {
+            Pop-Location
         }
     }
 }

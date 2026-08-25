@@ -85,7 +85,7 @@ def normalize_job(
     cleaned = clean_text(description)
     if isinstance(posted_at, str):
         try:
-            posted_at = datetime.fromisoformat(posted_at.replace("Z", "+00:00"))
+            posted_at = datetime.fromisoformat(posted_at)
         except ValueError:
             try:
                 posted_at = parsedate_to_datetime(posted_at)

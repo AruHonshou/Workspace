@@ -1,6 +1,8 @@
 from pathlib import Path
 
 import pytest
+from pypdf import PdfReader
+
 from job_orchestrator.documents import (
     UnsupportedDocument,
     extract_document_text,
@@ -16,7 +18,6 @@ from job_orchestrator.schemas import (
     Profile,
     ProfileFact,
 )
-from pypdf import PdfReader
 
 
 def test_plain_text_extraction() -> None:

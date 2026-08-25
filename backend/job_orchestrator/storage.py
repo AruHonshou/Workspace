@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from threading import RLock
-from typing import Any, TypeVar
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -21,8 +21,6 @@ from .schemas import (
     RunStatus,
     utc_now,
 )
-
-T = TypeVar("T", bound=BaseModel)
 
 
 class ActiveRunsError(RuntimeError):
@@ -117,7 +115,7 @@ def _dump(model: BaseModel) -> str:
     return model.model_dump_json()
 
 
-def _load(model_type: type[T], raw: str) -> T:
+def _load[T: BaseModel](model_type: type[T], raw: str) -> T:
     return model_type.model_validate_json(raw)
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import httpx
 import pytest
+
 from job_orchestrator.connectors import (
     CONNECTOR_TYPES,
     ConnectorError,
