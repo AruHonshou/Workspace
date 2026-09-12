@@ -1,111 +1,587 @@
-# AmeWork 2
+# Workspace
 
-> A local-first, open-source workspace to find recent jobs, save useful opportunities, and prepare evidence-grounded applications without applying automatically.
+Workspace es una aplicación local para organizar una búsqueda laboral, preparar candidaturas y mejorar la presencia profesional con ayuda opcional de inteligencia artificial.
 
-[Español](README.es.md) · [Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+> Workspace es la evolución actual del proyecto que anteriormente se conocía como AmeWork. Este repositorio documenta la versión moderna, simplificada y orientada a uso personal local.
 
-[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](backend/pyproject.toml)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)](backend/job_orchestrator/main.py)
-[![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=10202A)](frontend/package.json)
-[![License: Apache 2.0](https://img.shields.io/badge/Code-Apache--2.0-D22128)](LICENSE)
+## Qué es Workspace
 
-![AmeWork home with Ame's animated terrarium](docs/images/amework-home.png)
+Workspace no es un portal de empleo ni un sistema de aplicación automática. Es un espacio de trabajo profesional que reúne:
 
-## The product
+- Buscadores de empleo.
+- Documentos profesionales.
+- Análisis de requisitos.
+- Preparación para entrevistas.
+- Generación de documentos orientados a una vacante.
+- Seguimiento del proceso de selección.
+- Mejora del perfil de LinkedIn.
 
-AmeWork has five focused pages:
+La aplicación abre siempre la publicación original de la vacante. No inicia sesión en portales de empleo, no rellena formularios automáticamente y no envía candidaturas en nombre del usuario.
 
-- **Search** — enter a role, country, publication window (today, 7 days or 30 days), and desired portals. Search does not require a résumé or AI.
-- **Favorites** — keep interesting vacancies, open their original listing and, only when requested, analyze gaps, prepare an interview guide or create an ATS résumé.
-- **My résumé** — create professional profiles, import language-specific résumés, review extracted facts and confirm the evidence ledger.
-- **LinkedIn** — import LinkedIn's PDF export or pasted text and generate six copy-ready sections using the selected confirmed profile.
-- **Settings** — configure TheirStack and DeepSeek in the operating-system credential vault, export local data or erase it.
+El diseño es local-first: perfiles, documentos, favoritos, análisis y configuraciones se almacenan en la instalación local. Los servicios externos solo reciben los datos estrictamente necesarios para la operación solicitada.
 
-AmeWork never logs into a job board, fills forms, sends email or submits an application.
+## Principios del producto
 
-## Search architecture
+### Local-first
 
-`JobSearchService` accepts only role, country, publication window, portals and an idempotency identifier. It has no dependency on profiles or AI.
+Workspace está pensado para ejecutarse en el equipo del usuario. Esto permite conservar el control sobre los CV, datos de contacto, notas, historial y documentos generados.
 
-- **TheirStack** is the optional BYOK data provider for records originating from LinkedIn, Indeed, Computrabajo, Glassdoor, company pages and ATSs, subject to actual coverage.
-- **Brete/ANE** is an independent Costa Rica-only adapter that reads public official search cards without credentials or access-control bypasses.
-- Every record keeps data provider and publication source separate.
-- Duplicate listings are merged while preserving all observed source links. Preferred link order is company, ATS, then portal.
-- Pages are requested manually, cached locally for 30 minutes and never retried automatically when a billable outcome is uncertain.
-- AmeWork reports recovered sources and partial failures; it never claims to cover the whole Internet.
+### IA bajo demanda
 
-Restricted portals are not scraped directly. TheirStack's API is the data contract when a record originated on those portals.
+La búsqueda y la organización básica no dependen de DeepSeek. La inteligencia artificial se utiliza cuando el usuario solicita una acción concreta:
 
-## Evidence-grounded assistance
+- Analizar brechas.
+- Preparar una entrevista.
+- Crear un CV ATS.
+- Mejorar un perfil de LinkedIn.
 
-Optional AI features use one direct DeepSeek HTTPS request with strict Pydantic output validation. There is no agent framework or hidden tool loop.
+### Evidencia antes que invención
 
-The deterministic `ProfileFact` ledger is the authority. Generated personal claims must cite confirmed record identifiers; unsupported résumé lines are rejected in code. Reference answers in interview guides are educational content and are never presented as the user's experience.
+La IA puede mejorar la redacción, ordenar información y adaptar el lenguaje a una vacante, pero no debe inventar experiencia, tecnologías, fechas, métricas, empresas, títulos ni certificaciones.
 
-The ATS flow is explicit:
+### Publicación original
 
-1. Generate a one-column proposal in the vacancy language.
-2. Validate every proposed line against confirmed evidence.
-3. Show the draft and validation issues.
-4. Require human approval.
-5. Render selectable-text PDF and DOCX files.
+Workspace ayuda a investigar y preparar una candidatura, pero la decisión y el envío final siempre permanecen con el usuario.
 
-LinkedIn follows the same boundary: deterministic PDF/text parsing first, then an optional evidence-checked proposal for headline, About, experience, education, skills and certifications.
+### Fallos parciales y transparencia
 
-## Privacy and security
+Si una fuente de empleos no responde, las demás pueden seguir entregando resultados. La interfaz debe explicar qué fuentes funcionaron, cuáles fallaron y qué datos se obtuvieron.
 
-- Résumés, extracted facts, jobs, favorites, analyses and generated files remain on the local machine.
-- Search providers receive search criteria only, never résumé content.
-- DeepSeek receives the minimum redacted, confirmed professional facts and required job/profile text only after a preview and consent.
-- Original PDFs and contact details are not sent to DeepSeek.
-- API keys live in Windows Credential Manager, macOS Keychain or Linux Secret Service (or runtime secret files); they never return to the browser, SQLite, events or documents.
-- External job and PDF text is always treated as untrusted data.
+## Experiencia y navegación
 
-## Run locally
+La interfaz interna utiliza una metáfora de navegador profesional dentro de un workspace 3D. Cada módulo tiene una ruta propia y puede abrirse como una página completa:
 
-Requirements: Python 3.12, `uv`, Node.js 22+, `pnpm` 11.19.0 and PowerShell 7. OCR is optional.
+| Ruta | Módulo |
+| --- | --- |
+| / | Inicio y escena 3D interactiva |
+| /buscar | Búsqueda de empleos |
+| /favoritos | Vacantes guardadas |
+| /favoritos/:id | Detalle de una vacante guardada |
+| /mi-cv | Perfiles profesionales y documentos |
+| /sobre-mi | Banco de información profesional |
+| /candidaturas | Seguimiento de procesos |
+| /linkedin | Analizador de perfil de LinkedIn |
+| /configuracion | Proveedores, IA y datos locales |
 
-```powershell
-git clone https://github.com/AruHonshou/AmeWork.git
-cd AmeWork
+La landing muestra un escritorio en primera persona. El monitor es el punto de entrada principal a los módulos. La escena conserva interacciones con el monitor y objetos del escritorio, como el cuaderno, el ratón y la taza.
+
+## Módulos
+
+### Inicio
+
+La página de inicio presenta el workspace 3D y el acceso a la aplicación. El usuario puede observar la escena con un movimiento suave de cámara y entrar al espacio de trabajo desde el monitor.
+
+### Buscar empleos
+
+Permite elegir puesto, país, ventana de publicación, fuentes disponibles, modalidad e inclusión de oportunidades remotas cuando corresponda.
+
+Los resultados se normalizan para presentar una experiencia homogénea aunque provengan de portales distintos. El usuario puede abrir la publicación original o guardarla en Favoritos.
+
+### Favoritos
+
+Centraliza las vacantes que el usuario desea revisar más adelante. Cada favorito conserva la información útil de la oferta y permite abrir el portal, elegir el perfil profesional, analizar brechas, preparar entrevista, crear un CV ATS y marcar el puesto dentro del flujo de candidatura.
+
+### Mi CV
+
+Permite crear varios perfiles profesionales, por ejemplo QA Automation, Software Engineer, Ciberseguridad o Data Analyst. Cada perfil puede conservar documentos en español e inglés.
+
+El proceso de un CV sigue tres etapas:
+
+1. Importar el documento.
+2. Revisar los datos extraídos.
+3. Confirmar la información que podrá utilizar la IA.
+
+### Configuración
+
+Concentra los ajustes de TheirStack, DeepSeek, idioma, datos locales, diagnóstico de conexión y exportación o eliminación de datos. Las claves de API se configuran localmente y no deben incluirse en el repositorio.
+
+## Flujo principal
+
+~~~text
+1. Crear un perfil profesional en Mi CV.
+2. Importar el CV en español, inglés o ambos idiomas.
+3. Revisar y confirmar la información detectada.
+4. Ir a Buscar empleos.
+5. Buscar un puesto y seleccionar filtros.
+6. Guardar las vacantes de interés.
+7. Abrir un favorito.
+8. Seleccionar el perfil que se utilizará para documentos.
+9. Analizar brechas, preparar entrevista o crear un CV ATS.
+10. Abrir la publicación original y gestionar el proceso en Candidaturas.
+~~~
+
+La búsqueda puede utilizarse sin configurar IA. Las funciones inteligentes se ejecutan únicamente cuando el usuario las solicita.
+## Búsqueda de empleo
+
+### Proveedores y fuentes
+
+Workspace separa dos conceptos:
+
+- Proveedor de datos: el servicio técnico que entrega la información.
+- Fuente de la vacante: el portal donde se publicó el empleo.
+
+TheirStack puede funcionar como proveedor unificado para fuentes como LinkedIn, Indeed, Computrabajo, Glassdoor, InfoJobs u otras disponibles en su cobertura. En la interfaz el usuario debe ver la fuente real de la vacante, no confundirla con el proveedor técnico.
+
+Para Costa Rica se contempla también la integración de fuentes locales compatibles, como Brete/ANE, sin mezclar su lógica con TheirStack.
+
+### Normalización
+
+Cada resultado se transforma al modelo común de empleo. La normalización contempla título, empresa, ubicación, modalidad, fecha de publicación, descripción, requisitos, URL canónica, fuente original e identificador externo.
+
+### Duplicados
+
+La misma vacante puede aparecer en varios portales. Workspace puede agrupar resultados con señales como:
+
+- Empresa normalizada.
+- Título normalizado.
+- Ubicación.
+- URL.
+- Similitud de descripción.
+
+La oferta agrupada puede conservar varias URLs de origen y mostrar cuál portal la publicó.
+
+### Caché y consumo
+
+Las búsquedas repetidas deben aprovechar la caché local para evitar peticiones innecesarias y reducir el consumo de créditos. La paginación es manual: se muestran resultados iniciales y el usuario solicita más cuando lo necesita.
+
+Si una fuente falla, la búsqueda conserva los resultados de las fuentes que sí respondieron.
+
+## Perfiles y CV
+
+Un perfil profesional representa una versión enfocada de la experiencia del usuario. Puede tener nombre, rol objetivo, CV en español, CV en inglés, información extraída, hechos confirmados, estado de revisión y fecha de actualización.
+
+El idioma de una oferta ayuda a elegir el CV correspondiente:
+
+- Oferta en inglés: se utiliza el CV en inglés.
+- Oferta en español: se utiliza el CV en español.
+
+El análisis de brechas se presenta en español por defecto y puede traducirse desde la interfaz cuando el usuario lo solicita.
+
+### Hechos profesionales
+
+Los hechos confirmados funcionan como un registro de evidencia. Pueden representar:
+
+- Tecnologías y herramientas.
+- Responsabilidades y logros.
+- Fechas y empresas.
+- Estudios, certificaciones e idiomas.
+
+Una generación debe poder relacionar sus afirmaciones con hechos existentes. Si no existe evidencia suficiente, el sistema debe expresarlo como brecha o dato pendiente, no convertirlo en una afirmación falsa.
+
+## Favoritos y análisis
+
+En el detalle de un favorito se combinan los datos de la vacante, su descripción, los requisitos detectados, el perfil seleccionado y las acciones de preparación.
+
+### Análisis de brechas
+
+El análisis compara la vacante con el CV del perfil elegido y devuelve:
+
+- Requisitos respaldados por el CV.
+- Fortalezas relevantes.
+- Requisitos parcialmente respaldados.
+- Tecnologías o conocimientos no encontrados.
+- Información que requiere confirmación.
+- Recomendaciones realistas antes de postular.
+
+El análisis no debe limitarse a copiar el CV ni a mostrar un porcentaje sin explicación. Su objetivo es explicar la distancia entre el puesto y la evidencia disponible.
+
+## Preparación de entrevistas
+
+La guía de entrevista se adapta al idioma de la oferta y puede incluir:
+
+- Resumen del puesto.
+- Tecnologías y responsabilidades relevantes.
+- Fortalezas del perfil.
+- Brechas que conviene preparar.
+- Preguntas técnicas y conductuales.
+- Temas de estudio.
+- Preguntas que el candidato puede hacer.
+- Plan de preparación.
+
+La guía se puede consultar en pantalla y generar como PDF cuando la funcionalidad esté disponible.
+
+## Generación de CV ATS
+
+El CV ATS se crea para una vacante concreta a partir de:
+
+1. El CV del perfil seleccionado.
+2. La descripción de la vacante.
+3. Los requisitos detectados.
+4. Los hechos profesionales confirmados.
+5. La información adicional de Sobre mí.
+
+La IA adapta la redacción y prioriza palabras clave respaldadas por evidencia. No debe copiar el CV original sin análisis ni rellenar el documento con afirmaciones nuevas.
+
+El documento ATS debe mantener una estructura simple y legible:
+
+~~~text
+Nombre y datos de contacto
+
+Resumen profesional
+
+Habilidades
+
+Experiencia
+
+Proyectos
+
+Educación
+
+Certificaciones
+~~~
+
+El renderer controla el diseño final del PDF para mantener compatibilidad con sistemas ATS. Se evita depender de columnas, gráficos, iconos, barras de nivel, tablas decorativas o información que dificulte la extracción de texto.
+## Sobre mí
+
+Sobre mí es un banco de información profesional complementario al CV. Puede contener:
+
+- Estudios.
+- Proyectos.
+- Portafolio y sitios web.
+- GitHub.
+- Certificaciones.
+- Experiencia adicional.
+- Logros.
+- Preferencias profesionales.
+- Objetivos de carrera.
+
+La información se guarda localmente y puede actualizarse. Su propósito es aportar contexto verificable para el CV ATS, el análisis de brechas y la mejora de LinkedIn.
+
+## Candidaturas
+
+Candidaturas funciona como un mini CRM personal. Una vacante puede avanzar por estados como:
+
+- Guardada.
+- Postulada.
+- Contactado.
+- Revisión inicial.
+- Entrevista.
+- Prueba técnica.
+- Oferta.
+- Contratado.
+- Rechazado.
+- Cerrado.
+
+Cada registro puede conservar empresa, puesto, ubicación, perfil utilizado, fecha, estado actual, notas e historial de cambios.
+
+El sistema ayuda a organizar el proceso, pero no envía mensajes ni aplica automáticamente.
+
+## Analizador de LinkedIn
+
+El usuario puede exportar su perfil de LinkedIn como PDF y subirlo a Workspace. El flujo utiliza:
+
+- El perfil profesional seleccionado en Mi CV.
+- El idioma de salida.
+- El objetivo profesional.
+- La información de Sobre mí.
+- El PDF exportado de LinkedIn.
+
+Primero se extrae la estructura del PDF y después se analiza con IA. Las áreas principales son:
+
+- Titular.
+- Acerca de.
+- Experiencia.
+- Educación.
+- Habilidades.
+- Certificaciones.
+
+El resultado está pensado para copiar y pegar en LinkedIn. Debe distinguir qué existe actualmente, qué funciona, qué falta, qué propuesta se recomienda y qué evidencia del CV o Sobre mí respalda la propuesta.
+
+## Arquitectura
+
+Workspace está dividido en una interfaz React y una API local en FastAPI:
+
+~~~text
+React + TypeScript + Vite
+          |
+          | HTTP
+          v
+FastAPI
+  |-- rutas de empleos, perfiles, favoritos, IA y configuración
+  |-- servicios de dominio
+  |-- proveedores externos
+  |-- parsers y renderizadores de documentos
+          |
+          v
+SQLite local
+~~~
+
+La capa de servicios separa la lógica de búsqueda, favoritos, documentos y análisis para evitar que una integración externa controle directamente la interfaz.
+
+La capa de IA utiliza un proveedor abstracto. DeepSeek es el proveedor configurado actualmente, pero la separación permite incorporar otro proveedor sin reescribir todos los servicios.
+
+## Tecnologías
+
+### Frontend
+
+- React.
+- TypeScript.
+- Vite.
+- React Router.
+- Three.js.
+- CSS con tokens de diseño y estilos responsivos.
+
+### Backend
+
+- Python.
+- FastAPI.
+- Pydantic.
+- HTTPX.
+- SQLite.
+- FTS5 cuando aplica a búsquedas locales.
+
+### Documentos
+
+- pypdf/PyMuPDF para extracción de PDF.
+- python-docx para documentos de Word.
+- ReportLab para generación de PDFs.
+- Renderizadores propios para documentos profesionales.
+
+### Calidad
+
+- Vitest para pruebas del frontend.
+- pytest para pruebas del backend.
+- Ruff para validación de Python.
+- Scripts de contratos, assets, secretos y SBOM.
+
+## Estructura del repositorio
+
+~~~text
+Workspace/
+|-- backend/
+|   |-- job_orchestrator/
+|   |   |-- api/
+|   |   |-- domain/
+|   |   |-- services/
+|   |   |-- providers/
+|   |   |-- repositories/
+|   |   |-- documents/
+|   |   |-- storage/
+|   |   +-- main.py
+|   +-- tests/
+|-- frontend/
+|   |-- src/
+|   |   |-- app/
+|   |   |-- pages/
+|   |   |-- features/
+|   |   |-- components/
+|   |   |-- api/
+|   |   |-- hooks/
+|   |   +-- styles/
+|   +-- tests/
+|-- scripts/
+|-- docs/
+|-- output/
+|-- pyproject.toml
+|-- package.json
+|-- vite.config.ts
+|-- .env.example
++-- README.md
+~~~
+
+La estructura concreta puede evolucionar, pero la separación por dominio debe mantenerse: buscar empleos no debe depender del flujo de IA y los documentos no deben depender de la navegación de React.
+## Instalación local
+
+### Requisitos
+
+- Windows, macOS o Linux.
+- Node.js compatible con el proyecto.
+- Python 3.12 o versión compatible definida por el proyecto.
+- Git.
+- Una clave de TheirStack para búsqueda de empleos.
+- Una clave de DeepSeek para funciones de IA.
+
+### Clonar
+
+~~~powershell
+git clone https://github.com/AruHonshou/Workspace.git
+cd Workspace
+~~~
+
+### Crear configuración local
+
+~~~powershell
 Copy-Item .env.example .env
+~~~
+
+Edita el archivo .env y agrega las claves necesarias. Nunca publiques ese archivo ni incluyas claves directamente en el código.
+
+### Preparar dependencias
+
+~~~powershell
 ./scripts/bootstrap.ps1
+~~~
+
+### Iniciar desarrollo
+
+~~~powershell
 ./scripts/dev.ps1
-```
+~~~
 
-Open [http://127.0.0.1:5173](http://127.0.0.1:5173). The API binds to `127.0.0.1:8765` by default. Docker development is available with `docker compose up --build`.
+La aplicación queda disponible normalmente en la URL local que indique el script. El frontend y el backend se ejecutan juntos durante el desarrollo.
 
-Runtime secrets are `THEIRSTACK_API_KEY` and `DEEPSEEK_API_KEY`, or their `_FILE` counterparts.
+## Configuración
 
-## Quality checks
+Las variables de entorno pueden variar según la versión, pero las principales son:
 
-```powershell
+~~~text
+DEEPSEEK_API_KEY=
+DEEPSEEK_MODEL=
+THEIRSTACK_API_KEY=
+DATABASE_PATH=
+BACKEND_HOST=
+BACKEND_PORT=
+FRONTEND_PORT=
+~~~
+
+Consulta .env.example antes de añadir nuevas variables.
+
+### Buenas prácticas
+
+- Usa claves propias en tu entorno local.
+- No subas .env.
+- No guardes CV ni PDFs dentro del repositorio.
+- No compartas la base de datos local si contiene información personal.
+- Revoca cualquier clave que haya sido expuesta accidentalmente.
+- No copies datos sensibles en issues públicos.
+
+## Comandos de desarrollo
+
+Los scripts de scripts/ centralizan tareas frecuentes:
+
+~~~powershell
+# Preparar o actualizar el entorno
+./scripts/bootstrap.ps1
+
+# Ejecutar frontend y backend
+./scripts/dev.ps1
+
+# Ejecutar pruebas completas
 ./scripts/test.ps1
+
+# Ejecutar una comprobación rápida
+./scripts/test.ps1 -Quick
+
+# Generar o validar contratos
 ./scripts/generate-contracts.ps1
+
+# Validar archivos estáticos
+./scripts/validate-assets.ps1
+
+# Buscar posibles secretos
+./scripts/scan-secrets.ps1
+
+# Generar inventario de dependencias
+./scripts/generate-sbom.ps1
+~~~
+
+## Privacidad y seguridad
+
+Workspace está pensado para trabajar con información profesional sensible. La aplicación debe seguir estas reglas:
+
+- La base de datos local no debe exponerse públicamente.
+- Las claves se almacenan mediante la configuración local y los mecanismos de protección disponibles.
+- Los logs no deben escribir claves, tokens, CV completos ni datos de contacto innecesarios.
+- Las URLs de vacantes se validan antes de abrirse.
+- Los archivos importados deben tener límites de tamaño y tipo.
+- Los datos enviados a IA deben limitarse a la operación solicitada.
+- La IA no debe recibir secretos de configuración.
+- El usuario debe poder exportar o eliminar sus datos locales.
+
+La privacidad local no significa que ningún dato salga del equipo: las búsquedas se envían al proveedor configurado y las funciones de IA envían el contexto necesario al proveedor de IA. La interfaz debe comunicarlo con claridad.
+
+## Pruebas y validación
+
+Antes de publicar cambios conviene ejecutar:
+
+~~~powershell
+./scripts/test.ps1
 ./scripts/validate-assets.ps1
 ./scripts/scan-secrets.ps1
-./scripts/generate-sbom.ps1
-```
+~~~
 
-Tests use fake providers and synthetic profiles; they do not consume real API credits. OpenAPI generates the frontend TypeScript contract.
+Las áreas críticas de prueba son:
 
-## Repository map
+- Navegación entre rutas.
+- Búsquedas con uno o varios proveedores.
+- Caché y deduplicación.
+- Errores parciales y timeouts.
+- Importación de CV en español e inglés.
+- Confirmación de hechos profesionales.
+- Análisis de brechas.
+- Guías de entrevista.
+- Generación y descarga de PDF ATS.
+- Importación de un PDF de LinkedIn.
+- Favoritos y candidaturas.
+- Configuración de proveedores.
+- Responsive y accesibilidad.
 
-```text
-backend/job_orchestrator/
-  providers/jobs/       TheirStack boundary and Brete adapter
-  providers/ai/         generic AIProvider and direct DeepSeek implementation
-  services/             search identity, cache and explicit services
-  documents/            evidence checks and deterministic renderers
-frontend/src/
-  app/                   routes and full-page layout
-  pages/                 Search, Favorites and Favorite detail
-  components/            résumé, LinkedIn, settings and 3D scene
-assets/                  checksums and third-party provenance
-```
+Las respuestas de IA deben validarse con datos sintéticos y casos conocidos para comprobar que no inventan experiencia ni modifican fechas.
+## Estado del proyecto
 
-## License and fan-work notice
+La versión publicada en este repositorio representa el Workspace actual antes de una limpieza adicional de archivos antiguos. El objetivo de esta copia es conservar un punto de retorno completo y separado del repositorio histórico de AmeWork.
 
-Code is [Apache-2.0](LICENSE). Third-party media keeps its original license and attribution in [THIRD_PARTY_ASSETS.md](THIRD_PARTY_ASSETS.md) and [`assets/manifest.json`](assets/manifest.json).
+La aplicación ya contiene la base funcional de:
 
-**Smol Ame in an Upcycled Terrarium** is by **Seafoam**, licensed CC BY 4.0. AmeWork is an unofficial fan project and is not affiliated with or endorsed by COVER Corporation or hololive production.
+- Navegación por módulos.
+- Búsqueda laboral.
+- Fuentes y normalización de resultados.
+- Favoritos.
+- Perfiles y documentos.
+- Sobre mí.
+- Candidaturas.
+- Integración de IA.
+- Análisis de vacantes.
+- Preparación de entrevistas.
+- CV ATS.
+- Análisis de LinkedIn.
+- Landing 3D y workspace interactivo.
+
+La publicación del instalador de Windows se mantiene fuera del alcance actual. Ese empaquetado se realizará en una fase posterior.
+
+## Contribuir
+
+Las contribuciones deben mantener el alcance local-first y la separación de responsabilidades.
+
+Antes de abrir un cambio:
+
+1. Explica qué problema resuelve.
+2. Indica qué módulo se ve afectado.
+3. Evita incluir secretos o datos personales.
+4. Añade o actualiza pruebas.
+5. Ejecuta los scripts de validación disponibles.
+6. Documenta los cambios de configuración.
+7. Comprueba que las rutas existentes no se rompan.
+
+Para una integración nueva de empleos, separa siempre:
+
+- Cliente del proveedor.
+- Modelo normalizado de vacante.
+- Adaptador de fuente.
+- Manejo de errores.
+- Pruebas con respuestas reales anonimizadas.
+
+Para una función de IA, define:
+
+- Entrada mínima necesaria.
+- Modelo estructurado de salida.
+- Validación de evidencia.
+- Mensaje de error en español.
+- Comportamiento cuando DeepSeek no está configurado o no responde.
+
+## Licencia y activos
+
+Antes de publicar el proyecto como open source, revisa las licencias de:
+
+- Dependencias de frontend y backend.
+- Modelos 3D.
+- Texturas.
+- Fuentes.
+- Iconos.
+- Plantillas.
+- Código de terceros.
+- Assets descargados desde repositorios externos.
+
+Los assets que no tengan una licencia compatible deben reemplazarse o documentarse antes de la publicación pública. La intención del proyecto es utilizar una identidad visual propia y mantener avisos de atribución cuando una licencia lo requiera.
+
+
