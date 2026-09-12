@@ -1,114 +1,69 @@
-# AmeWork
+# AmeWork 2
 
-> Orquestador multiagente personal para descubrir empleos, comparar cada vacante con tu experiencia real y preparar entrevistas sin inventar información ni postular automáticamente.
+> A local-first, open-source workspace to find recent jobs, save useful opportunities, and prepare evidence-grounded applications without applying automatically.
+
+[Español](README.es.md) · [Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](backend/pyproject.toml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)](backend/job_orchestrator/main.py)
-[![LangGraph](https://img.shields.io/badge/LangGraph-StateGraph-173F35)](backend/job_orchestrator/workflow.py)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=10202A)](frontend/package.json)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](frontend/package.json)
 [![License: Apache 2.0](https://img.shields.io/badge/Code-Apache--2.0-D22128)](LICENSE)
 
-![Portada de AmeWork con la escena 3D del terrario](docs/images/amework-home.png)
+![AmeWork home with Ame's animated terrarium](docs/images/amework-home.png)
 
-## ¿Qué es AmeWork?
+## The product
 
-AmeWork es una aplicación web local, bilingüe y orientada a Windows. Su objetivo es convertir una búsqueda laboral dispersa en un flujo claro:
+AmeWork has five focused pages:
 
-1. Importas un CV en español y otro en inglés.
-2. Revisas y confirmas los hechos profesionales extraídos.
-3. Escribes un rol, por ejemplo `QA`, `Desarrollador` o `Data Analyst`.
-4. AmeWork consulta vacantes de Costa Rica y oportunidades remotas compatibles.
-5. Filtras el mismo conjunto por últimas 24 horas, 7 días o 30 días.
-6. Comparas cada puesto con el CV del idioma correspondiente.
-7. Guardas las oportunidades que te interesan y generas una guía de entrevista en PDF.
+- **Search** — enter a role, country, publication window (today, 7 days or 30 days), and desired portals. Search does not require a résumé or AI.
+- **Favorites** — keep interesting vacancies, open their original listing and, only when requested, analyze gaps, prepare an interview guide or create an ATS résumé.
+- **My résumé** — create professional profiles, import language-specific résumés, review extracted facts and confirm the evidence ledger.
+- **LinkedIn** — import LinkedIn's PDF export or pasted text and generate six copy-ready sections using the selected confirmed profile.
+- **Settings** — configure TheirStack and DeepSeek in the operating-system credential vault, export local data or erase it.
 
-La aplicación **no rellena formularios, no envía correos y no presenta candidaturas**. La decisión y el envío siempre pertenecen al usuario.
+AmeWork never logs into a job board, fills forms, sends email or submits an application.
 
-![Panel de resultados con filtros, procedencia, encaje y acciones](docs/images/amework-results.png)
+## Search architecture
 
-## Funcionalidad principal
+`JobSearchService` accepts only role, country, publication window, portals and an idempotency identifier. It has no dependency on profiles or AI.
 
-| Área | Qué hace |
-| --- | --- |
-| **Mi CV** | Importa CV español e inglés, extrae experiencia, habilidades, educación y logros, permite corregir cada hecho y exige confirmación antes de analizar vacantes. |
-| **Buscar empleos** | Amplía el rol en español e inglés y recupera resultados de los últimos 30 días. TheirStack es la fuente principal; conectores públicos autorizados funcionan como respaldo. |
-| **Resultados** | Muestra puesto, empresa, ubicación, modalidad, fecha, requisitos, fuente, tipo de enlace y encaje. Los filtros de 24 h, 7 días y 30 días no repiten la búsqueda ni consumen créditos adicionales. |
-| **Ver análisis** | Explica fortalezas, brechas y cambios recomendados al CV, usando exclusivamente experiencia confirmada. No crea logros, métricas ni conocimientos inexistentes. |
-| **Me interesa** | Guarda la vacante de forma idempotente y genera una guía de entrevista determinista, revisada y descargable en PDF. |
-| **Mis intereses** | Conserva vacantes seleccionadas, análisis y guías para retomarlos después. |
+- **TheirStack** is the optional BYOK data provider for records originating from LinkedIn, Indeed, Computrabajo, Glassdoor, company pages and ATSs, subject to actual coverage.
+- **Brete/ANE** is an independent Costa Rica-only adapter that reads public official search cards without credentials or access-control bypasses.
+- Every record keeps data provider and publication source separate.
+- Duplicate listings are merged while preserving all observed source links. Preferred link order is company, ATS, then portal.
+- Pages are requested manually, cached locally for 30 minutes and never retried automatically when a billable outcome is uncertain.
+- AmeWork reports recovered sources and partial failures; it never claims to cover the whole Internet.
 
-## Una orquestadora visible, cinco funciones internas
+Restricted portals are not scraped directly. TheirStack's API is the data contract when a record originated on those portals.
 
-La escena muestra únicamente a Ame en su terrario. Por debajo, un `StateGraph` de LangGraph coordina cinco responsabilidades tipadas; no son conversaciones ficticias ni se expone razonamiento privado.
+## Evidence-grounded assistance
 
-| Función | Responsabilidad | Límite |
-| --- | --- | --- |
-| Coordinación | Valida el estado del perfil, dirige el flujo y solicita decisiones humanas. | No busca ni puntúa. |
-| Búsqueda | Amplía el rol, consulta fuentes y conserva procedencia. | No recibe datos personales del CV. |
-| Análisis | Relaciona requisitos con hechos profesionales confirmados. | No inventa ni modifica el perfil. |
-| Preparación | Propone preparación de entrevista basada en evidencia. | No presenta la candidatura. |
-| Revisión | Audita fechas, enlaces, respaldo y contenido final. | No aprueba en lugar del usuario. |
+Optional AI features use one direct DeepSeek HTTPS request with strict Pydantic output validation. There is no agent framework or hidden tool loop.
 
-Las fechas, deduplicación, filtros, ranking, validación de enlaces y renderizado PDF son procesos deterministas. DeepSeek sólo participa en propuestas estructuradas que luego se validan con esquemas Pydantic y reglas de respaldo.
+The deterministic `ProfileFact` ledger is the authority. Generated personal claims must cite confirmed record identifiers; unsupported résumé lines are rejected in code. Reference answers in interview guides are educational content and are never presented as the user's experience.
 
-## Arquitectura
+The ATS flow is explicit:
 
-```mermaid
-flowchart LR
-    U[Usuario] --> UI[React 19 + Three.js]
-    UI -->|REST| API[FastAPI]
-    API --> G[LangGraph StateGraph]
-    G --> C[Coordinación]
-    G --> S[Búsqueda]
-    G --> A[Análisis]
-    G --> P[Preparación]
-    G --> R[Revisión]
-    S --> TS[TheirStack]
-    S --> FB[Fuentes públicas autorizadas]
-    A --> DS[DeepSeek API]
-    P --> DS
-    API --> DB[(SQLite + checkpoints)]
-    API --> PDF[PDF determinista]
-    API --> WC[Windows Credential Manager]
-```
+1. Generate a one-column proposal in the vacancy language.
+2. Validate every proposed line against confirmed evidence.
+3. Show the draft and validation issues.
+4. Require human approval.
+5. Render selectable-text PDF and DOCX files.
 
-### Tecnologías
+LinkedIn follows the same boundary: deterministic PDF/text parsing first, then an optional evidence-checked proposal for headline, About, experience, education, skills and certifications.
 
-- **Backend:** Python 3.12, FastAPI, LangChain, LangGraph, Pydantic y SQLite.
-- **Frontend:** React 19, TypeScript, Vite, Three.js y React Three Fiber.
-- **Búsqueda:** TheirStack como proveedor principal; Jobicy, Remotive, Remote OK, Himalayas, We Work Remotely y ATS configurables como respaldo.
-- **Análisis:** DeepSeek mediante una API key almacenada fuera de la base de datos.
-- **Documentos:** ReportLab y PyPDF, con trazabilidad entre afirmaciones y hechos confirmados.
-- **Entorno:** `uv` para Python y `pnpm` para el frontend.
+## Privacy and security
 
-## Fuentes y procedencia
+- Résumés, extracted facts, jobs, favorites, analyses and generated files remain on the local machine.
+- Search providers receive search criteria only, never résumé content.
+- DeepSeek receives the minimum redacted, confirmed professional facts and required job/profile text only after a preview and consent.
+- Original PDFs and contact details are not sent to DeepSeek.
+- API keys live in Windows Credential Manager, macOS Keychain or Linux Secret Service (or runtime secret files); they never return to the browser, SQLite, events or documents.
+- External job and PDF text is always treated as untrusted data.
 
-Cada resultado mantiene campos separados para:
+## Run locally
 
-- proveedor de datos;
-- portal o dominio de origen;
-- URL de origen;
-- URL final de candidatura;
-- tipo de enlace: empresa/ATS o portal;
-- fecha exacta de publicación y fecha de recuperación.
-
-TheirStack puede devolver ofertas originadas en LinkedIn, Indeed, Glassdoor, Computrabajo, ATS y páginas corporativas. AmeWork **no controla sesiones, cookies ni credenciales de esos portales y no los scrapea directamente**. “Todos los empleos” significa todos los registros recuperables desde las fuentes habilitadas durante esa ejecución, no todo Internet.
-
-## Instalación en Windows
-
-### Requisitos
-
-- Windows 10 u 11.
-- Python 3.12.
-- [`uv`](https://docs.astral.sh/uv/).
-- Node.js 22 o superior.
-- `pnpm` 11.19.0, fijado en [`package.json`](package.json).
-- Una API key de TheirStack para la cobertura principal.
-- Una API key de DeepSeek para análisis y preparación.
-- Tesseract OCR, únicamente si vas a importar documentos escaneados.
-
-### Inicio rápido
+Requirements: Python 3.12, `uv`, Node.js 22+, `pnpm` 11.19.0 and PowerShell 7. OCR is optional.
 
 ```powershell
 git clone https://github.com/AruHonshou/AmeWork.git
@@ -118,72 +73,39 @@ Copy-Item .env.example .env
 ./scripts/dev.ps1
 ```
 
-Después abre [http://127.0.0.1:5173](http://127.0.0.1:5173), entra en **Configuración** y valida TheirStack y DeepSeek por separado. Las claves se guardan en Windows Credential Manager y nunca regresan al navegador.
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). The API binds to `127.0.0.1:8765` by default. Docker development is available with `docker compose up --build`.
 
-El script de desarrollo levanta:
+Runtime secrets are `THEIRSTACK_API_KEY` and `DEEPSEEK_API_KEY`, or their `_FILE` counterparts.
 
-- frontend en `127.0.0.1:5173`;
-- backend en `127.0.0.1:8765`.
-
-Consulta la guía completa en [Primeros pasos](docs/getting-started.es.md) o el [manual bilingüe en PDF](output/pdf/manual-career-orchestrator.pdf).
-
-## Privacidad y seguridad
-
-- Los CV originales, SQLite, checkpoints, logs y PDF personales permanecen en el equipo y están excluidos de Git.
-- DeepSeek recibe únicamente hechos profesionales confirmados y la descripción necesaria de la vacante; se eliminan correo, teléfono y dirección.
-- TheirStack recibe el rol y los filtros de mercado, nunca el CV.
-- Las API keys se guardan como credenciales de Windows; no aparecen en `.env`, SQLite, eventos, logs, checkpoints ni PDF.
-- Toda descripción externa se trata como contenido no confiable y no puede cambiar instrucciones ni activar herramientas.
-- El servicio escucha sólo en `127.0.0.1` y usa un token de sesión local.
-- No existe fallback silencioso hacia otro proveedor.
-
-Antes de hacer público un fork, revisa también [SECURITY.md](SECURITY.md) y el [modelo de amenazas](docs/privacy-threat-model.es.md).
-
-## Pruebas
+## Quality checks
 
 ```powershell
 ./scripts/test.ps1
+./scripts/generate-contracts.ps1
 ./scripts/validate-assets.ps1
-pnpm build
+./scripts/scan-secrets.ps1
+./scripts/generate-sbom.ps1
 ```
 
-La suite cubre contratos, conectores simulados, paginación, caché, deduplicación, fechas frontera, URLs, credenciales, redacción de datos, reanudación, filtros, reducers, interfaz, fallback 2D y generación del PDF. CI utiliza servicios falsos deterministas: no consume créditos ni necesita claves reales.
+Tests use fake providers and synthetic profiles; they do not consume real API credits. OpenAPI generates the frontend TypeScript contract.
 
-## Estructura del repositorio
+## Repository map
 
 ```text
-AmeWork/
-├── backend/                 # API, dominio, agentes, grafo, conectores y pruebas
-├── frontend/                # React, escena 3D, paneles y pruebas
-├── assets/                  # Manifiesto, licencias y procedencia visual
-├── docs/                    # Documentación técnica ES/EN e imágenes del README
-├── output/pdf/              # Manual público bilingüe
-├── scripts/                 # Instalación, desarrollo, pruebas y validaciones
-├── .github/workflows/       # Integración continua
-├── .env.example             # Configuración segura sin secretos
-├── THIRD_PARTY_ASSETS.md     # Atribución del modelo 3D
-└── LICENSE                  # Apache-2.0 para el código
+backend/job_orchestrator/
+  providers/jobs/       TheirStack boundary and Brete adapter
+  providers/ai/         generic AIProvider and direct DeepSeek implementation
+  services/             search identity, cache and explicit services
+  documents/            evidence checks and deterministic renderers
+frontend/src/
+  app/                   routes and full-page layout
+  pages/                 Search, Favorites and Favorite detail
+  components/            résumé, LinkedIn, settings and 3D scene
+assets/                  checksums and third-party provenance
 ```
 
-## Documentación
+## License and fan-work notice
 
-- [Índice de documentación](docs/README.md)
-- [Arquitectura](docs/architecture.es.md)
-- [Contratos y eventos](docs/contracts-and-events.es.md)
-- [Fuentes y términos de servicio](docs/sources-and-tos.es.md)
-- [DeepSeek y Credential Manager](docs/deepseek-windows.es.md)
-- [Evaluación](docs/evaluation.es.md)
-- [Solución de problemas](docs/troubleshooting.es.md)
-- [Cómo contribuir](CONTRIBUTING.md)
+Code is [Apache-2.0](LICENSE). Third-party media keeps its original license and attribution in [THIRD_PARTY_ASSETS.md](THIRD_PARTY_ASSETS.md) and [`assets/manifest.json`](assets/manifest.json).
 
-## Licencias y atribución
-
-El código de AmeWork se distribuye bajo [Apache License 2.0](LICENSE).
-
-La escena **Smol Ame in an Upcycled Terrarium** fue creada por **Seafoam** y se conserva bajo **CC BY 4.0**. El GLB mantiene su licencia propia y no queda relicenciado por Apache-2.0. Procedencia, checksum y permiso de redistribución están documentados en [`assets/manifest.json`](assets/manifest.json), [`THIRD_PARTY_ASSETS.md`](THIRD_PARTY_ASSETS.md) y [licencias](docs/licensing.es.md).
-
-Este es un proyecto fan no oficial, sin afiliación ni respaldo de COVER Corporation, hololive production ni las personas representadas. No incluye voces, canciones ni imitación de personalidad.
-
----
-
-English technical documentation is available from the [documentation index](docs/README.md).
+**Smol Ame in an Upcycled Terrarium** is by **Seafoam**, licensed CC BY 4.0. AmeWork is an unofficial fan project and is not affiliated with or endorsed by COVER Corporation or hololive production.

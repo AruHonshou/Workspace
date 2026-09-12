@@ -1,6 +1,27 @@
-import type { DeepFitAnalysis, DeepSeekStatus, GraphEvent, Interest, SearchRunSummary, TheirStackStatus } from "../types";
+import type {
+  AboutMeProfile,
+  ApplicationStatus,
+  ATSResumeVersion,
+  CountryOption,
+  DeepSeekStatus,
+  InterviewGuide,
+  JobApplication,
+  JobRecord,
+  LinkedInOptimizationVersion,
+  LinkedInSection,
+  LinkedInProfileSnapshot,
+  ProviderCoverage,
+  TheirStackStatus,
+} from "../types";
 
 const DEFAULT_API_BASE_URL = "";
+import type { components } from "../generated/api";
+export type SimpleSearchResult = Required<components["schemas"]["SearchResult"]>;
+export type SimpleSearchInput = components["schemas"]["JobSearchInput"];
+export type SavedJob = components["schemas"]["SavedJob"];
+export type SavedJobCreate = components["schemas"]["SavedJobCreate"];
+export type DeepFitAnalysisV2 = components["schemas"]["DeepFitAnalysisV2"];
+export type JobSource = "manual" | "linkedin" | "indeed" | "glassdoor" | "computrabajo" | "theirstack" | "brete";
 
 export interface ApiConfig {
   baseUrl: string;
@@ -92,30 +113,6 @@ async function request<T>(config: ApiConfig, path: string, init: RequestInit = {
   return body as T;
 }
 
-export type SearchRunMode = "replay" | "live";
-export type JobSource = "replay" | "manual" | "greenhouse" | "lever" | "ashby" | "himalayas" | "we_work_remotely" | "jobicy" | "remotive" | "remote_ok" | "linkedin" | "indeed" | "glassdoor" | "computrabajo" | "theirstack";
-
-export interface StartSearchInput {
-  mode: SearchRunMode;
-  profile_id?: string;
-  query: string;
-  location?: string;
-  work_mode?: "remote" | "hybrid" | "any";
-  sources: JobSource[];
-  source_identifiers: Record<string, string>;
-  job_ids?: string[];
-  limit?: number;
-  use_model?: boolean;
-  auto_approve?: boolean;
-}
-
-export interface ApprovalDecisionInput {
-  decision: string;
-  edits?: Record<string, unknown>;
-  artifact_version?: number;
-  entity_ids?: string[];
-}
-
 export interface BackendProfileFact {
   fact_id: string;
   category: string;
@@ -124,12 +121,12 @@ export interface BackendProfileFact {
   evidence?: string | null;
   source_page?: number | null;
   source_span?: string | null;
-  language?: "es" | "en" | null;
+  language?: string | null;
 }
 
 export interface BackendResumeDocument {
   document_id: string;
-  language: "es" | "en";
+  language: string;
   filename: string;
   imported_at: string;
   extraction_method: string;
@@ -138,12 +135,35 @@ export interface BackendResumeDocument {
 
 export interface BackendProfile {
   profile_id: string;
+  display_name?: string;
   name: string;
   summary: string;
+  revision?: number;
   confirmed: boolean;
   facts: BackendProfileFact[];
-  resumes?: Partial<Record<"es" | "en", BackendResumeDocument>>;
-  preferences?: { desired_titles?: string[]; desired_locations?: string[] };
+  resumes?: Record<string, BackendResumeDocument>;
+  redacted_preview?: {
+    preview_id: string;
+    profile_revision: number;
+    language?: string | null;
+    redacted_text: string;
+    redacted_categories: string[];
+    content_hash: string;
+  } | null;
+  cloud_processing_consent?: {
+    status: "pending" | "granted" | "declined" | "revoked";
+    profile_revision: number;
+    preview_id: string;
+    purposes: string[];
+  } | null;
+  preferences?: {
+    desired_titles?: string[];
+    desired_locations?: string[];
+    target_seniorities?: string[];
+    allowed_work_modes?: Array<"remote" | "hybrid" | "onsite">;
+    excluded_keywords?: string[];
+    excluded_sectors?: string[];
+  };
 }
 
 export interface BackendCareerResult {
@@ -158,7 +178,7 @@ export interface BackendCareerResult {
   published_at: string;
   official_apply_url: string;
   apply_url?: string | null;
-  apply_url_type?: "company" | "portal";
+  apply_url_type?: "official" | "ats" | "portal" | "company";
   provider?: string | null;
   source_portal?: string | null;
   source_url?: string | null;
@@ -173,74 +193,30 @@ export interface BackendCareerResult {
   };
   freshness_verified: true;
   official_url_verified: true;
+  profile_id?: string | null;
+  compatibility_status?: "compatible" | "review" | "review_separately";
+  filter_reasons?: string[];
+  warnings?: string[];
+  country_code?: string | null;
+  remote_eligibility?: "eligible_for_country" | "ineligible" | "unknown" | "worldwide";
+}
+
+export interface ProfileUpdateInput {
+  display_name?: string;
+  preferences?: {
+    desired_titles?: string[];
+    desired_locations?: string[];
+    target_seniorities?: string[];
+    allowed_work_modes?: Array<"remote" | "hybrid" | "onsite">;
+    excluded_keywords?: string[];
+    excluded_sectors?: string[];
+  };
 }
 
 export interface BackendProfileImport {
   profile: BackendProfile;
   extraction_method: string;
   warnings: string[];
-}
-
-export interface BackendRankedJob {
-  job: {
-    job_id: string;
-    company: string;
-    title: string;
-    location: string;
-    remote: boolean | null;
-    source: string;
-    retrieved_at: string;
-    pipeline_status: string;
-  };
-  score: number;
-  eligible: boolean | null;
-  reasons: string[];
-  gaps: string[];
-}
-
-export interface BackendRun extends SearchRunSummary {
-  result: {
-    profile_id?: string;
-    ranked_jobs?: BackendRankedJob[];
-    artifact_ids?: string[];
-    review?: { approved?: boolean };
-    aliases?: string[];
-    career_results?: BackendCareerResult[];
-    window_started_at?: string;
-    window_ended_at?: string;
-    provider?: string;
-    total_available?: number | null;
-    retrieved_count?: number;
-    next_page?: number | null;
-    can_load_more?: boolean;
-    loaded_pages?: number[];
-    coverage?: {
-      sources_requested?: string[];
-      sources_failed?: string[];
-      retrieved?: number;
-      accepted?: number;
-      rejected?: Record<string, number>;
-    };
-  };
-}
-
-export interface BackendPack {
-  id: string;
-  job_id: string;
-  title: string;
-  version: number;
-  status: string;
-  claims_verified: number;
-  claims_total: number;
-  created_at: string;
-}
-
-export interface BackendArtifact {
-  artifact_id: string;
-  title: string;
-  content: string;
-  version: number;
-  claims: Array<{ text: string; fact_ids: string[] }>;
 }
 
 export interface ManualJobInput {
@@ -254,8 +230,182 @@ export interface ManualJobInput {
   source?: JobSource;
 }
 
+export interface CoverageQuery {
+  countryCode: string;
+  role?: string;
+  provider?: "theirstack";
+}
+
+function idempotencyHeaders(key?: string): HeadersInit {
+  return key ? { "Idempotency-Key": key } : {};
+}
+
+function normalizeJob(value: BackendCareerResult): JobRecord {
+  const workMode = /\b(hybrid|híbrido|hibrido)\b/i.test(value.location)
+    ? "hybrid"
+    : value.remote === true || /\b(remote|remoto)\b/i.test(value.location)
+      ? "remote"
+      : "onsite";
+  return {
+    id: value.job_id,
+    company: value.company,
+    title: value.title,
+    location: value.location,
+    workMode,
+    source: value.source,
+    sources: value.sources ?? [value.source],
+    verificationLevel: value.verification_level ?? "official",
+    publishedAt: value.published_at,
+    officialApplyUrl: value.apply_url ?? value.official_apply_url,
+    applyUrlType: value.apply_url_type === "company" ? "official" : value.apply_url_type ?? "official",
+    provider: value.provider,
+    sourcePortal: value.source_portal,
+    sourceUrl: value.source_url,
+    description: value.description_summary,
+    requirements: value.requirements,
+    fitScore: value.fit_summary.score,
+    fitLevel: value.fit_summary.level,
+    evidence: value.fit_summary.strengths,
+    gaps: value.fit_summary.gaps,
+    profileId: value.profile_id ?? null,
+    compatibilityStatus: value.compatibility_status === "review" ? "review_separately" : value.compatibility_status ?? "compatible",
+    filterReasons: value.filter_reasons ?? [],
+    warnings: value.warnings ?? [],
+    countryCode: value.country_code ?? null,
+    remoteEligibility: value.remote_eligibility ?? "unknown",
+  };
+}
+
+type RawLinkedInSnapshot = {
+  snapshot_id: string;
+  profile_id: string;
+  language: string;
+  sections: Record<string, string>;
+  created_at: string;
+  updated_at: string;
+};
+
+type RawLinkedInOptimization = {
+  optimization_id: string;
+  snapshot_id: string;
+  version: number;
+  profile_revision: number;
+  language: string;
+  target_roles: string[];
+  status: LinkedInOptimizationVersion["status"];
+  review_issues: string[];
+  error?: string | null;
+  created_at: string;
+  sections: Array<{
+    section: LinkedInSection["key"];
+    current_text: string;
+    proposed_text: string;
+    rationale: string;
+    keywords: string[];
+    evidence?: string[];
+  }>;
+};
+
+function normalizeLinkedInOptimization(value: RawLinkedInOptimization): LinkedInOptimizationVersion {
+  return {
+    ...value,
+    sections: value.sections.map((section) => ({
+      ...section,
+      evidence: section.evidence ?? [],
+    })),
+  };
+}
+
+export function applyLinkedInOptimization(snapshot: LinkedInProfileSnapshot, version: LinkedInOptimizationVersion): LinkedInProfileSnapshot {
+  const proposals = new Map(version.sections.map((section) => [section.section, section]));
+  return {
+    ...snapshot,
+    language: version.language,
+    status: version.status === "ready" ? "ready" : version.status === "failed" ? "failed" : "optimizing",
+    error: version.error,
+    sections: snapshot.sections.map((section) => ({
+      ...section,
+      ...(proposals.get(section.key) ?? {}),
+      key: section.key,
+    })),
+  };
+}
+
+function normalizeLinkedInSnapshot(value: RawLinkedInSnapshot): LinkedInProfileSnapshot {
+  const keys: LinkedInSection["key"][] = ["headline", "about", "experience", "education", "skills", "certifications"];
+  return {
+    snapshot_id: value.snapshot_id,
+    profile_id: value.profile_id,
+    language: value.language,
+    status: "imported",
+    sections: keys.map((key) => ({ key, current_text: value.sections[key] ?? "" })),
+    created_at: value.created_at,
+    updated_at: value.updated_at,
+  };
+}
+
 export const api = {
   initializeSession,
+
+  simpleSearch(payload: SimpleSearchInput): Promise<SimpleSearchResult> {
+    return request(apiConfig, "/api/searches", { method: "POST", body: JSON.stringify(payload) });
+  },
+  getSimpleSearch(id: string): Promise<SimpleSearchResult> {
+    return request(apiConfig, `/api/searches/${encodeURIComponent(id)}`);
+  },
+  moreSimpleSearch(id: string, page: number): Promise<SimpleSearchResult> {
+    return request(apiConfig, `/api/searches/${encodeURIComponent(id)}/pages/${page}`, { method: "POST" });
+  },
+  listSavedJobs(): Promise<SavedJob[]> {
+    return request(apiConfig, "/api/saved-jobs");
+  },
+  getSavedJob(savedId: string): Promise<SavedJob> {
+    return request(apiConfig, `/api/saved-jobs/${encodeURIComponent(savedId)}`);
+  },
+  saveSimpleJob(payload: SavedJobCreate): Promise<SavedJob> {
+    return request(apiConfig, "/api/saved-jobs", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  deleteSavedJob(savedId: string): Promise<void> {
+    return request(apiConfig, `/api/saved-jobs/${encodeURIComponent(savedId)}`, { method: "DELETE" });
+  },
+  analyzeSavedJob(savedId: string, profileId: string, language: "es" | "en" = "es"): Promise<DeepFitAnalysisV2> {
+    return request(apiConfig, `/api/saved-jobs/${encodeURIComponent(savedId)}/analyses?profile_id=${encodeURIComponent(profileId)}&language=${language}`, {
+      method: "POST",
+      headers: idempotencyHeaders(`saved-analysis:${savedId}:${profileId}`),
+    });
+  },
+  prepareSavedJobGuide(savedId: string, profileId: string): Promise<InterviewGuide> {
+    return request(apiConfig, `/api/saved-jobs/${encodeURIComponent(savedId)}/interview-guides?profile_id=${encodeURIComponent(profileId)}`, {
+      method: "POST",
+      headers: idempotencyHeaders(`saved-guide:${savedId}:${profileId}`),
+    });
+  },
+
+  getSavedJobGuide(savedId: string, profileId: string): Promise<InterviewGuide> {
+    return request(apiConfig, `/api/saved-jobs/${encodeURIComponent(savedId)}/interview-guides/${encodeURIComponent(profileId)}`);
+  },
+
+  regenerateSavedJobGuide(savedId: string, profileId: string): Promise<InterviewGuide> {
+    return request(apiConfig, `/api/saved-jobs/${encodeURIComponent(savedId)}/interview-guides/${encodeURIComponent(profileId)}/regenerate`, {
+      method: "POST",
+    });
+  },
+
+  savedJobGuideUrl(savedId: string, profileId: string, disposition: "inline" | "attachment" = "attachment"): string {
+    return `${apiConfig.baseUrl}/api/saved-jobs/${encodeURIComponent(savedId)}/interview-guides/${encodeURIComponent(profileId)}/document.pdf?disposition=${disposition}`;
+  },
+  prepareSavedJobResume(savedId: string, profileId: string, regenerate = false): Promise<ATSResumeVersion> {
+    return request(apiConfig, `/api/saved-jobs/${encodeURIComponent(savedId)}/ats-resumes?profile_id=${encodeURIComponent(profileId)}${regenerate ? "&regenerate=true" : ""}`, {
+      method: "POST",
+      headers: idempotencyHeaders(`saved-resume:${savedId}:${profileId}`),
+    });
+  },
+  getSavedJobResumes(savedId: string, profileId: string): Promise<ATSResumeVersion[]> {
+    return request(apiConfig, `/api/saved-jobs/${encodeURIComponent(savedId)}/ats-resumes?profile_id=${encodeURIComponent(profileId)}`);
+  },
 
   getDeepSeekSettings(): Promise<DeepSeekStatus> {
     return request(apiConfig, "/api/settings/deepseek");
@@ -287,9 +437,42 @@ export const api = {
     return request(apiConfig, "/api/settings/theirstack", { method: "DELETE" });
   },
 
+  getAboutMe(): Promise<AboutMeProfile> {
+    return request(apiConfig, "/api/about-me");
+  },
+
+  saveAboutMe(value: Pick<AboutMeProfile, "contact" | "entries">): Promise<AboutMeProfile> {
+    return request(apiConfig, "/api/about-me", {
+      method: "PUT",
+      body: JSON.stringify(value),
+    });
+  },
+
+  listApplications(): Promise<JobApplication[]> {
+    return request(apiConfig, "/api/applications");
+  },
+
+  createApplication(savedId: string, profileId: string): Promise<JobApplication> {
+    return request(apiConfig, "/api/applications", {
+      method: "POST",
+      body: JSON.stringify({ saved_id: savedId, profile_id: profileId, status: "applied" }),
+    });
+  },
+
+  updateApplication(applicationId: string, patch: { status?: ApplicationStatus; notes?: string }): Promise<JobApplication> {
+    return request(apiConfig, `/api/applications/${encodeURIComponent(applicationId)}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+  },
+
+  deleteApplication(applicationId: string): Promise<void> {
+    return request(apiConfig, `/api/applications/${encodeURIComponent(applicationId)}`, { method: "DELETE" });
+  },
+
   importProfile(
     file: File,
-    language?: "es" | "en",
+    language?: string,
     profileId?: string | null,
   ): Promise<BackendProfileImport> {
     const body = new FormData();
@@ -305,6 +488,32 @@ export const api = {
     return request(apiConfig, "/api/profiles");
   },
 
+  createProfile(displayName: string): Promise<BackendProfile> {
+    return request(apiConfig, "/api/profiles", {
+      method: "POST",
+      body: JSON.stringify({ display_name: displayName, name: displayName }),
+    });
+  },
+
+  updateProfile(profileId: string, patch: ProfileUpdateInput): Promise<BackendProfile> {
+    return request(apiConfig, `/api/profiles/${encodeURIComponent(profileId)}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+  },
+
+  duplicateProfile(profileId: string): Promise<BackendProfile> {
+    return request(apiConfig, `/api/profiles/${encodeURIComponent(profileId)}/duplicate`, {
+      method: "POST",
+    });
+  },
+
+  deleteProfile(profileId: string): Promise<void> {
+    return request(apiConfig, `/api/profiles/${encodeURIComponent(profileId)}`, {
+      method: "DELETE",
+    });
+  },
+
   patchProfileFact(id: string, patch: { text?: string; verified?: boolean }): Promise<BackendProfile> {
     return request(apiConfig, `/api/profile-facts/${encodeURIComponent(id)}`, {
       method: "PATCH",
@@ -318,293 +527,112 @@ export const api = {
     });
   },
 
-  createCareerSearch(profileId: string, role: string): Promise<SearchRunSummary> {
-    return request(apiConfig, "/api/career/searches", {
+  reprocessProfile(profileId: string): Promise<BackendProfile> {
+    return request(apiConfig, `/api/profiles/${encodeURIComponent(profileId)}/reprocess`, {
       method: "POST",
-      body: JSON.stringify({ profile_id: profileId, role }),
     });
   },
 
-  getCareerSearch(runId: string): Promise<BackendRun> {
-    return request(apiConfig, `/api/career/searches/${encodeURIComponent(runId)}`);
+  getCloudPreview(profileId: string): Promise<NonNullable<BackendProfile["redacted_preview"]>> {
+    return request(apiConfig, `/api/profiles/${encodeURIComponent(profileId)}/cloud-preview`);
   },
 
-  loadMoreCareerResults(runId: string, page: number): Promise<BackendRun> {
-    return request(apiConfig, `/api/career/searches/${encodeURIComponent(runId)}/more`, {
+  decideCloudConsent(profileId: string, granted: boolean): Promise<BackendProfile> {
+    return request(apiConfig, `/api/profiles/${encodeURIComponent(profileId)}/cloud-consent`, {
       method: "POST",
-      body: JSON.stringify({ page }),
+      body: JSON.stringify({
+        granted,
+        purposes: ["fit_analysis", "document_generation"],
+      }),
     });
   },
 
-  getJobAnalysis(jobId: string, profileId: string): Promise<DeepFitAnalysis> {
-    return request(apiConfig, `/api/jobs/${encodeURIComponent(jobId)}/analysis?profile_id=${encodeURIComponent(profileId)}`);
+  listCountries(): Promise<CountryOption[]> {
+    return request(apiConfig, "/api/countries");
   },
 
-  createInterest(jobId: string, profileId: string, runId: string): Promise<Interest> {
-    return request(apiConfig, `/api/jobs/${encodeURIComponent(jobId)}/interests`, {
-      method: "POST",
-      body: JSON.stringify({ profile_id: profileId, run_id: runId }),
-    });
+  listProviders(): Promise<Array<{ id: string; name: string; configured: boolean; enabled: boolean }>> {
+    return request(apiConfig, "/api/providers");
   },
 
-  listInterests(profileId?: string): Promise<Interest[]> {
-    const query = profileId ? `?profile_id=${encodeURIComponent(profileId)}` : "";
-    return request(apiConfig, `/api/interests${query}`);
+  getProviderCoverage(input: CoverageQuery): Promise<ProviderCoverage[]> {
+    const query = new URLSearchParams({ country_code: input.countryCode, provider: input.provider ?? "theirstack" });
+    if (input.role?.trim()) query.set("role", input.role.trim());
+    return request(apiConfig, `/api/providers/coverage?${query.toString()}`);
   },
 
-  getInterest(interestId: string): Promise<Interest> {
-    return request(apiConfig, `/api/interests/${encodeURIComponent(interestId)}`);
-  },
-
-  deleteInterest(interestId: string): Promise<void> {
-    return request(apiConfig, `/api/interests/${encodeURIComponent(interestId)}`, { method: "DELETE" });
-  },
-
-  interviewGuideUrl(interestId: string): string {
-    return `${apiConfig.baseUrl}/api/interests/${encodeURIComponent(interestId)}/guide.pdf`;
-  },
-
-  createSearchRun(input: StartSearchInput): Promise<SearchRunSummary> {
-    return request(apiConfig, "/api/search-runs", {
-      method: "POST",
-      body: JSON.stringify({ auto_approve: false, ...input }),
-    });
-  },
-
-  listSearchRuns(): Promise<SearchRunSummary[]> {
-    return request(apiConfig, "/api/search-runs");
-  },
-
-  getSearchRun(runId: string): Promise<BackendRun> {
-    return request(apiConfig, `/api/search-runs/${encodeURIComponent(runId)}`);
-  },
-
-  listApplicationPacks(runId?: string): Promise<BackendPack[]> {
-    const query = runId ? `?run_id=${encodeURIComponent(runId)}` : "";
-    return request(apiConfig, `/api/application-packs${query}`);
-  },
-
-  getArtifact(artifactId: string): Promise<BackendArtifact> {
-    return request(apiConfig, `/api/artifacts/${encodeURIComponent(artifactId)}`);
-  },
-
-  createManualJob(input: ManualJobInput): Promise<{ job_id: string }> {
-    return request(apiConfig, "/api/jobs/manual", {
-      method: "POST",
-      body: JSON.stringify(input),
-    });
-  },
-
-  cancelRun(runId: string): Promise<unknown> {
-    return request(apiConfig, `/api/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST" });
-  },
-
-  decideApproval(approvalId: string, input: ApprovalDecisionInput): Promise<unknown> {
-    return request(apiConfig, `/api/approvals/${encodeURIComponent(approvalId)}/decisions`, {
-      method: "POST",
-      body: JSON.stringify(input),
-    });
-  },
-
-  exportApplicationPack(packId: string): Promise<{ download_url?: string; artifact_id?: string }> {
-    return request(apiConfig, `/api/application-packs/${encodeURIComponent(packId)}/export`, { method: "POST" });
-  },
-
-  updateJobPipelineStatus(jobId: string, status: string): Promise<unknown> {
-    return request(apiConfig, `/api/jobs/${encodeURIComponent(jobId)}/pipeline-status`, {
+  approveATSResume(resumeId: string): Promise<ATSResumeVersion> {
+    return request(apiConfig, `/api/ats-resumes/${encodeURIComponent(resumeId)}/approve`, {
       method: "PATCH",
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ approved: true }),
     });
   },
+
+  atsResumeUrl(resumeId: string, format: "pdf" | "docx"): string {
+    return `${apiConfig.baseUrl}/api/ats-resumes/${encodeURIComponent(resumeId)}.${format}`;
+  },
+
+  async importLinkedIn(file: File, profileId: string, language: string): Promise<LinkedInProfileSnapshot> {
+    const body = new FormData();
+    body.append("file", file);
+    body.append("profile_id", profileId);
+    body.append("language", language);
+    return normalizeLinkedInSnapshot(await request<RawLinkedInSnapshot>(apiConfig, "/api/linkedin/imports", { method: "POST", body }));
+  },
+
+  async importLinkedInText(profileId: string, language: string, text: string): Promise<LinkedInProfileSnapshot> {
+    const value = await request<RawLinkedInSnapshot>(apiConfig, "/api/linkedin/imports", {
+      method: "POST",
+      body: JSON.stringify({ profile_id: profileId, language, text }),
+    });
+    return normalizeLinkedInSnapshot(value);
+  },
+
+  async listLinkedInImports(profileId?: string): Promise<LinkedInProfileSnapshot[]> {
+    const query = profileId ? `?profile_id=${encodeURIComponent(profileId)}` : "";
+    const values = await request<RawLinkedInSnapshot[]>(apiConfig, `/api/linkedin/imports${query}`);
+    return values.map(normalizeLinkedInSnapshot);
+  },
+
+  async listLinkedInOptimizations(snapshotId: string): Promise<LinkedInOptimizationVersion[]> {
+    const values = await request<RawLinkedInOptimization[]>(apiConfig, `/api/linkedin/imports/${encodeURIComponent(snapshotId)}/optimizations`);
+    return values.map(normalizeLinkedInOptimization);
+  },
+
+  async updateLinkedInSections(snapshotId: string, sections: LinkedInProfileSnapshot["sections"]): Promise<LinkedInProfileSnapshot> {
+    const value = await request<RawLinkedInSnapshot>(apiConfig, `/api/linkedin/imports/${encodeURIComponent(snapshotId)}/sections`, {
+      method: "PATCH",
+      body: JSON.stringify({ sections: Object.fromEntries(sections.map((section) => [section.key, section.current_text])) }),
+    });
+    return normalizeLinkedInSnapshot(value);
+  },
+
+  async reparseLinkedIn(snapshotId: string): Promise<LinkedInProfileSnapshot> {
+    const value = await request<RawLinkedInSnapshot>(apiConfig, `/api/linkedin/imports/${encodeURIComponent(snapshotId)}/reparse`, {
+      method: "POST",
+    });
+    return normalizeLinkedInSnapshot(value);
+  },
+
+  async optimizeLinkedIn(snapshot: LinkedInProfileSnapshot, targetRoles: string[], language: string): Promise<{ snapshot: LinkedInProfileSnapshot; version: LinkedInOptimizationVersion }> {
+    const value = await request<RawLinkedInOptimization>(apiConfig, `/api/linkedin/imports/${encodeURIComponent(snapshot.snapshot_id)}/optimize`, {
+      method: "POST",
+      headers: idempotencyHeaders(`linkedin:${snapshot.snapshot_id}:${language}:${targetRoles.join("|")}`),
+      body: JSON.stringify({ target_roles: targetRoles, language }),
+    });
+    const version = normalizeLinkedInOptimization(value);
+    return { snapshot: applyLinkedInOptimization(snapshot, version), version };
+  },
+
+  exportLocalData(): Promise<Record<string, unknown>> {
+    return request(apiConfig, "/api/data/export");
+  },
+
+  deleteLocalData(): Promise<Record<string, unknown>> {
+    return request(apiConfig, "/api/data", {
+      method: "DELETE",
+      body: JSON.stringify({ confirmation: "DELETE_ALL_LOCAL_DATA" }),
+    });
+  },
+
 };
-
-export interface ParsedSseFrame {
-  id?: string;
-  event?: string;
-  data: string;
-  retry?: number;
-}
-
-function recordOrEmpty(value: unknown): Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? value as Record<string, unknown>
-    : {};
-}
-
-/**
- * Keeps the UI compatible with older event producers while preserving the
- * versioned envelope. Unknown fields are intentionally ignored here and stay
- * available to newer clients through payload/template arguments.
- */
-export function normalizeGraphEvent(value: unknown): GraphEvent {
-  const raw = recordOrEmpty(value);
-  const sequence = Number(raw.sequence);
-  if (!Number.isFinite(sequence)) throw new Error("Graph event is missing a numeric sequence");
-
-  const rawUi = recordOrEmpty(raw.ui);
-  const rawActorKind = String(raw.actor_kind ?? "workflow");
-  const actorKind: GraphEvent["actor_kind"] = ["agent", "worker", "workflow", "user"].includes(rawActorKind)
-    ? rawActorKind as GraphEvent["actor_kind"]
-    : "workflow";
-  const rawSeverity = String(rawUi.severity ?? "info");
-  const severity = ["info", "success", "warning", "error"].includes(rawSeverity)
-    ? rawSeverity as NonNullable<GraphEvent["ui"]["severity"]>
-    : "info";
-
-  return {
-    schema_version: typeof raw.schema_version === "string" || typeof raw.schema_version === "number"
-      ? raw.schema_version
-      : 1,
-    event_id: String(raw.event_id ?? `event-${sequence}`),
-    run_id: String(raw.run_id ?? "unknown-run"),
-    sequence,
-    timestamp: String(raw.timestamp ?? new Date(0).toISOString()),
-    type: String(raw.type ?? "event"),
-    stage: String(raw.stage ?? "unknown"),
-    actor_kind: actorKind,
-    actor_id: String(raw.actor_id ?? "workflow"),
-    target_id: raw.target_id == null ? undefined : String(raw.target_id),
-    entity_ref: raw.entity_ref == null ? undefined : String(raw.entity_ref),
-    causation_id: raw.causation_id == null ? undefined : String(raw.causation_id),
-    payload: recordOrEmpty(raw.payload),
-    visibility: raw.visibility === "debug" ? "debug" : "user",
-    ui: {
-      template_key: String(rawUi.template_key ?? "event.generic"),
-      template_args: recordOrEmpty(rawUi.template_args) as GraphEvent["ui"]["template_args"],
-      severity,
-      progress: typeof rawUi.progress === "number" ? rawUi.progress : undefined,
-    },
-  };
-}
-
-export function parseSseFrame(frame: string): ParsedSseFrame | null {
-  const message: ParsedSseFrame = { data: "" };
-  const data: string[] = [];
-  for (const rawLine of frame.split(/\r?\n/)) {
-    if (!rawLine || rawLine.startsWith(":")) continue;
-    const separator = rawLine.indexOf(":");
-    const field = separator === -1 ? rawLine : rawLine.slice(0, separator);
-    const value = separator === -1 ? "" : rawLine.slice(separator + 1).replace(/^ /, "");
-    if (field === "data") data.push(value);
-    else if (field === "id") message.id = value;
-    else if (field === "event") message.event = value;
-    else if (field === "retry" && /^\d+$/.test(value)) message.retry = Number(value);
-  }
-  if (data.length === 0) return null;
-  message.data = data.join("\n");
-  return message;
-}
-
-export type StreamConnectionState = "connecting" | "open" | "reconnecting" | "closed" | "error";
-
-export interface RunEventHandlers {
-  onEvent: (event: GraphEvent) => void;
-  onStatus?: (status: StreamConnectionState) => void;
-  onError?: (error: Error) => void;
-}
-
-export class RunEventStream {
-  private stopped = true;
-  private controller: AbortController | null = null;
-  private retryTimer: ReturnType<typeof setTimeout> | null = null;
-  private lastSequence = 0;
-  private retryDelay = 750;
-
-  constructor(private readonly config: ApiConfig = apiConfig) {}
-
-  start(runId: string, handlers: RunEventHandlers): () => void {
-    this.stop();
-    this.stopped = false;
-    this.lastSequence = 0;
-    this.retryDelay = 750;
-    void this.connect(runId, handlers, false);
-    return () => this.stop();
-  }
-
-  stop(): void {
-    this.stopped = true;
-    this.controller?.abort();
-    this.controller = null;
-    if (this.retryTimer) clearTimeout(this.retryTimer);
-    this.retryTimer = null;
-  }
-
-  private scheduleReconnect(runId: string, handlers: RunEventHandlers): void {
-    if (this.stopped) return;
-    handlers.onStatus?.("reconnecting");
-    const delay = this.retryDelay;
-    this.retryDelay = Math.min(Math.round(this.retryDelay * 1.8), 15_000);
-    this.retryTimer = setTimeout(() => void this.connect(runId, handlers, true), delay);
-  }
-
-  private async connect(runId: string, handlers: RunEventHandlers, reconnecting: boolean): Promise<void> {
-    if (this.stopped) return;
-    handlers.onStatus?.(reconnecting ? "reconnecting" : "connecting");
-    this.controller = new AbortController();
-    try {
-      await initializeSession(this.config);
-      const url = new URL(
-        `${this.config.baseUrl}/api/runs/${encodeURIComponent(runId)}/events`,
-        window.location.origin,
-      );
-      if (this.lastSequence > 0) url.searchParams.set("after_sequence", String(this.lastSequence));
-      const response = await fetch(url, {
-        headers: {
-          Accept: "text/event-stream",
-          ...(this.lastSequence > 0 ? { "Last-Event-ID": String(this.lastSequence) } : {}),
-          ...authHeaders(this.config),
-        },
-        signal: this.controller.signal,
-        cache: "no-store",
-        credentials: "include",
-      });
-      if (response.status === 401 && !this.config.sessionToken) resetSession();
-      if (!response.ok || !response.body) {
-        throw new ApiError(`Event stream failed with status ${response.status}`, response.status);
-      }
-      handlers.onStatus?.("open");
-      this.retryDelay = 750;
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let terminal = false;
-      while (!this.stopped) {
-        const { value, done } = await reader.read();
-        buffer += decoder.decode(value, { stream: !done });
-        const frames = buffer.split(/\r?\n\r?\n/);
-        buffer = frames.pop() ?? "";
-        for (const frame of frames) {
-          const parsed = parseSseFrame(frame);
-          if (!parsed) continue;
-          const event = normalizeGraphEvent(JSON.parse(parsed.data));
-          if (event.run_id !== runId) throw new Error("Event belongs to a different run");
-          if (Number(event.schema_version) !== 1) throw new Error("Unsupported event schema version");
-          if (event.sequence <= this.lastSequence) continue;
-          if (this.lastSequence > 0 && event.sequence !== this.lastSequence + 1) {
-            this.lastSequence = 0;
-            throw new Error("Event sequence gap; requesting a full replay");
-          }
-          this.lastSequence = event.sequence;
-          handlers.onEvent(event);
-          if (["run_completed", "run_failed", "run_cancelled"].includes(event.type)) {
-            terminal = true;
-          }
-          if (parsed.retry) this.retryDelay = Math.min(parsed.retry, 15_000);
-        }
-        if (done) break;
-      }
-      if (terminal) {
-        this.stopped = true;
-        handlers.onStatus?.("closed");
-      } else if (!this.stopped) {
-        this.scheduleReconnect(runId, handlers);
-      }
-    } catch (error) {
-      if (this.stopped || (error instanceof DOMException && error.name === "AbortError")) return;
-      const normalized = error instanceof Error ? error : new Error(String(error));
-      handlers.onError?.(normalized);
-      handlers.onStatus?.("error");
-      this.scheduleReconnect(runId, handlers);
-    }
-  }
-}

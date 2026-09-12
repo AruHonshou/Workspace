@@ -29,7 +29,7 @@ export function WorkspaceModal({ title, eyebrow, onClose, children, wide = false
         <header className="workspace-modal-header">
           <div className="window-lights" aria-hidden="true"><i /><i /><i /></div>
           <div className="window-title"><span>{eyebrow}</span><h2 id="workspace-modal-title">{title}</h2></div>
-          <div className="window-mode" aria-hidden="true"><b>AME/OS</b><small>LOCAL · SECURE</small></div>
+          <div className="window-mode" aria-hidden="true"><b>WORKSPACE</b><small>LOCAL</small></div>
           <button ref={closeButton} type="button" className="modal-close" onClick={onClose} aria-label={closeLabel}>×</button>
         </header>
         <div className="workspace-modal-body">{children}</div>

@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-import time
+from pathlib import Path
 from typing import ClassVar
 
 import httpx
-from conftest import wait_for_run
-from fastapi.testclient import TestClient
-
 import job_orchestrator.api as api_module
+from fastapi.testclient import TestClient
+from job_orchestrator.config import Settings
 
 
 class FakeDeepSeekClient:
@@ -33,6 +32,26 @@ class FakeDeepSeekClient:
         )
 
 
+def test_owned_artifact_cleanup_is_confined_to_the_configured_root(
+    tmp_path: Path,
+) -> None:
+    settings = Settings(data_dir=tmp_path / "data")
+    settings.ensure_directories()
+    owned = settings.artifacts_dir / "ats" / "resume.pdf"
+    owned.parent.mkdir(parents=True)
+    owned.write_bytes(b"generated")
+    unrelated = tmp_path / "keep.pdf"
+    unrelated.write_bytes(b"private")
+
+    removed = api_module._remove_owned_artifact_files(
+        settings, [str(owned), str(unrelated)]
+    )
+
+    assert removed == 1
+    assert not owned.exists()
+    assert unrelated.read_bytes() == b"private"
+
+
 def test_profile_import_offloads_extraction_and_uses_stable_document_id(
     client: TestClient, monkeypatch
 ) -> None:
@@ -44,7 +63,9 @@ def test_profile_import_offloads_extraction_and_uses_stable_document_id(
         return await original_to_thread(function, *args, **kwargs)
 
     monkeypatch.setattr(api_module.asyncio, "to_thread", tracked_to_thread)
-    content = b"Python and SQL skills for production APIs.\nBuilt reliable data services."
+    content = (
+        b"Python and SQL skills for production APIs.\nBuilt reliable data services."
+    )
     response = client.post(
         "/api/profiles/import",
         files={"file": ("resume.txt", content, "text/plain")},
@@ -58,25 +79,11 @@ def test_profile_import_offloads_extraction_and_uses_stable_document_id(
     assert {fact["source_document_id"] for fact in facts} == {expected_id}
 
 
-def test_artifact_alias_and_delete_reset_all_local_state(client: TestClient) -> None:
-    run_id = client.post(
-        "/api/search-runs",
-        json={"mode": "replay", "auto_approve": True},
-    ).json()["run_id"]
-    wait_for_run(client, run_id)
-    artifact = client.get(f"/runs/{run_id}/artifacts").json()[0]
-    artifact_id = artifact["artifact_id"]
-
-    alias = client.get(f"/api/artifacts/{artifact_id}")
-    assert alias.status_code == 200
-    assert alias.json() == artifact
-    prepared = client.post(f"/api/application-packs/{artifact_id}/export")
-    assert prepared.status_code == 200, prepared.text
-    downloaded = client.get(prepared.json()["download_url"])
-    assert downloaded.status_code == 200
-    assert any(client.app.state.settings.artifacts_dir.rglob("*"))
-
-    previous_checkpointer = client.app.state.checkpointer
+def test_delete_reset_all_local_state(client: TestClient) -> None:
+    created = client.post(
+        "/api/profiles", json={"display_name": "QA", "name": "Ada Local"}
+    )
+    assert created.status_code == 201
     deleted = client.request(
         "DELETE",
         "/api/data",
@@ -85,52 +92,29 @@ def test_artifact_alias_and_delete_reset_all_local_state(client: TestClient) -> 
 
     assert deleted.status_code == 200, deleted.text
     assert deleted.json()["status"] == "deleted"
-    assert client.app.state.checkpointer is not previous_checkpointer
+    assert not hasattr(client.app.state, "checkpointer")
     snapshot = client.get("/api/data/export").json()
     assert snapshot == {
         "profiles": [],
         "jobs": [],
-        "runs": [],
-        "events": [],
-        "approvals": [],
-        "artifacts": [],
+        "searches": [],
     }
     assert list(client.app.state.settings.artifacts_dir.rglob("*")) == []
-    assert client.get(f"/api/artifacts/{artifact_id}").status_code == 404
-    checkpoint = client.app.state.checkpointer.get_tuple(
-        {"configurable": {"thread_id": run_id}}
-    )
-    assert checkpoint is None
+    assert client.get("/api/profiles").json() == []
 
 
-def test_delete_refuses_active_runs_and_requires_typed_confirmation(
+def test_delete_requires_typed_confirmation(
     client: TestClient,
 ) -> None:
-    invalid = client.request(
-        "DELETE", "/api/data", json={"confirmation": "yes"}
-    )
+    invalid = client.request("DELETE", "/api/data", json={"confirmation": "yes"})
     assert invalid.status_code == 422
 
-    run_id = client.post(
-        "/api/search-runs",
-        json={"mode": "replay", "auto_approve": False},
-    ).json()["run_id"]
-    deadline = time.monotonic() + 5
-    while time.monotonic() < deadline:
-        if client.get(f"/runs/{run_id}").json()["status"] == "awaiting_user":
-            break
-        time.sleep(0.02)
-    else:
-        raise AssertionError("Run did not reach an active approval gate")
-
-    refused = client.request(
+    accepted = client.request(
         "DELETE",
         "/api/data",
         json={"confirmation": "DELETE_ALL_LOCAL_DATA"},
     )
-    assert refused.status_code == 409
-    assert client.get(f"/runs/{run_id}").status_code == 200
-    client.post(f"/api/runs/{run_id}/cancel").raise_for_status()
+    assert accepted.status_code == 200
 
 
 def test_deepseek_key_is_validated_but_never_returned_or_persisted(

@@ -2,65 +2,71 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { createTranslator } from "../i18n";
-import { SearchView } from "./DashboardViews";
-import { ResultsView } from "./DashboardViews";
-import type { JobRecord } from "../types";
+import { ProfileView, FilterSelect } from "./DashboardViews";
+import type { CandidateProfile } from "../types";
 
 const t = createTranslator("es");
+const readyProfile: CandidateProfile = {
+  id: "profile_qa",
+  displayName: "QA",
+  name: "Ada",
+  headline: "QA engineer",
+  location: "Costa Rica",
+  targetRoles: ["QA"],
+  revision: 1,
+  completion: 100,
+  confirmed: true,
+  facts: [],
+  resumes: {},
+  preferences: { desiredTitles: ["QA"], targetSeniorities: [], allowedWorkModes: [], desiredLocations: ["Costa Rica"], excludedKeywords: [], excludedSectors: [] },
+};
 
-describe("Career search", () => {
-  it("asks only for a role and starts with the confirmed profile", async () => {
-    const onStart = vi.fn(async () => undefined);
-    render(<SearchView profileReady deepSeekReady t={t} locale="es" onStart={onStart} onManualImport={vi.fn(async () => undefined)} />);
+describe("Professional profiles", () => {
+  it("keeps the profile dialog open and explains a rejected create", async () => {
+    const onCreateProfile = vi.fn(async () => {
+      throw new Error("A professional profile with this name already exists");
+    });
+    render(<ProfileView
+      profile={readyProfile}
+      profiles={[readyProfile]}
+      t={t}
+      locale="es"
+      onSelectProfile={vi.fn(async () => undefined)}
+      onCreateProfile={onCreateProfile}
+      onRenameProfile={vi.fn(async () => undefined)}
+      onDuplicateProfile={vi.fn(async () => undefined)}
+      onDeleteProfile={vi.fn(async () => undefined)}
+      onUpdatePreferences={vi.fn(async () => undefined)}
+      onImport={vi.fn(async () => undefined)}
+      onUpdateFact={vi.fn(async () => undefined)}
+      onConfirm={vi.fn(async () => undefined)}
+      onReprocess={vi.fn(async () => undefined)}
+      onCloudConsent={vi.fn(async () => undefined)}
+    />);
 
-    await userEvent.type(screen.getByLabelText("Nombre del puesto"), "QA");
-    await userEvent.click(screen.getByRole("button", { name: "Buscar ahora" }));
+    await userEvent.click(screen.getByRole("button", { name: /Nuevo/i }));
+    await userEvent.type(screen.getByPlaceholderText("Ej. QA Automation"), "QA existente");
+    await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(onStart).toHaveBeenCalledWith("QA"));
-    expect(screen.getByText(/últimos 30 días/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Costa Rica/).length).toBeGreaterThanOrEqual(1);
-  });
-
-  it("blocks searching until the résumé is confirmed", async () => {
-    const onStart = vi.fn(async () => undefined);
-    render(<SearchView profileReady={false} deepSeekReady t={t} locale="es" onStart={onStart} onManualImport={vi.fn(async () => undefined)} />);
-
-    await userEvent.type(screen.getByLabelText("Nombre del puesto"), "Desarrollador");
-    expect(screen.getByRole("button", { name: "Buscar ahora" })).toBeDisabled();
-    expect(screen.getByText(/confirmar tu CV/i)).toBeInTheDocument();
-    expect(onStart).not.toHaveBeenCalled();
+    expect(await screen.findByRole("alert")).toHaveTextContent("already exists");
+    expect(screen.getByRole("dialog", { name: "Administrar perfil" })).toBeInTheDocument();
+    expect(onCreateProfile).toHaveBeenCalledOnce();
   });
 });
 
-describe("Stored result filters", () => {
-  it("switches 24 hours, 7 days, and 30 days without another search", async () => {
-    const anchor = "2026-08-20T18:00:00Z";
-    const job = (id: string, ageHours: number): JobRecord => ({
-      id,
-      company: `Company ${id}`,
-      title: `QA ${id}`,
-      location: "Remote - LATAM",
-      workMode: "remote",
-      source: "jobicy",
-      sources: ["jobicy"],
-      verificationLevel: "authorized_feed",
-      publishedAt: new Date(Date.parse(anchor) - ageHours * 3_600_000).toISOString(),
-      officialApplyUrl: `https://jobs.example/${id}`,
-      applyUrlType: "company",
-      description: "QA role",
-      requirements: [],
-      fitScore: 70,
-      fitLevel: "high",
-      evidence: [],
-      gaps: [],
-    });
-    render(<ResultsView jobs={[job("today", 12), job("week", 72), job("month", 480)]} analyses={{}} busyJob={null} aliases={[]} coverageIncomplete={false} referenceTime={anchor} t={t} locale="es" onAnalysis={vi.fn(async () => undefined)} onInterest={vi.fn(async () => undefined)} />);
-
-    expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(3);
-    await userEvent.click(screen.getByRole("button", { name: /24 h/i }));
-    expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(1);
-    expect(screen.getByText("QA today")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: /7 días/i }));
-    expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(2);
+describe("Shared profile selectors", () => {
+  it("allows keyboard selection and Escape dismissal", async () => {
+    const onChange = vi.fn();
+    render(<FilterSelect icon="▣" label="Perfil" ariaLabel="Perfil" value="qa"
+      options={[{value:"qa",label:"QA"},{value:"dev",label:"Desarrollo"}]} onChange={onChange} />);
+    const trigger = screen.getByRole("button", {name: /Perfil: QA/});
+    await userEvent.click(trigger);
+    expect(screen.getByRole("listbox", {name:"Perfil"})).toBeVisible();
+    await userEvent.keyboard("{ArrowDown}{Enter}");
+    expect(onChange).toHaveBeenCalledWith("dev");
+    await userEvent.click(trigger);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument());
+    expect(trigger).toHaveFocus();
   });
 });

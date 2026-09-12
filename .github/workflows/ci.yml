@@ -10,7 +10,11 @@ permissions:
 
 jobs:
   backend:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: backend
@@ -25,7 +29,11 @@ jobs:
       - run: uv run ruff check .
 
   frontend:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
@@ -39,11 +47,26 @@ jobs:
       - run: pnpm build
 
   policy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: uv sync --project backend --all-extras --dev
+      - run: pnpm install --frozen-lockfile
+      - shell: pwsh
+        run: ./scripts/generate-contracts.ps1
+      - run: git diff --exit-code -- frontend/src/generated
       - shell: pwsh
         run: ./scripts/validate-assets.ps1
+      - shell: pwsh
+        run: ./scripts/scan-secrets.ps1
       - shell: pwsh
         run: |
           $forbidden = Get-ChildItem -Recurse -File -Include *.fbx,*.usdz,*.cv.pdf,*.resume.pdf
@@ -51,3 +74,15 @@ jobs:
             $forbidden | ForEach-Object { Write-Error "Forbidden tracked file: $($_.FullName)" }
             exit 1
           }
+      - shell: pwsh
+        run: ./scripts/generate-sbom.ps1
+      - uses: actions/upload-artifact@v6
+        with:
+          name: sbom
+          path: output/sbom
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker compose build

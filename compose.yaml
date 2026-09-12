@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      JOB_ORCHESTRATOR_DATA_DIR: /data
+      JOB_ORCHESTRATOR_ARTIFACT_DIR: /data/artifacts
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      THEIRSTACK_API_KEY: ${THEIRSTACK_API_KEY:-}
+      DO_NOT_TRACK: "1"
+    volumes:
+      - amework-data:/data
+    expose:
+      - "8765"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:5173:80"
+
+volumes:
+  amework-data:

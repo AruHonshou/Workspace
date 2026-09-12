@@ -1,6 +1,6 @@
 # Licencias 3D y gate de publicación
 
-[English](licensing.md) · Última revisión: 2026-08-17
+[English](licensing.md) · Última revisión: 2026-08-29
 
 Es una lista técnica de cumplimiento, no asesoría legal. Mandan los términos
 exactos aceptados al obtener cada archivo.
@@ -74,6 +74,11 @@ exactamente un GLB: **Smol Ame in an Upcycled Terrarium** de Seafoam, CC BY 4.0,
 aportado por el usuario y verificado por bytes. Está marcado
 `included_local_noncommercial` y `publishable: true` con atribución obligatoria.
 El validador comprueba ruta, tamaño, SHA-256, evidencia, animación y fallback.
+
+El manifiesto también registra `UKLELESONG.mp3` y `ame.png`, archivos aportados
+por el propietario con autorización expresa para incluirlos y redistribuirlos
+en AmeWork. Conservan checksum, tamaño, nombre original y una licencia separada
+del código. El audio es opcional y la aplicación sigue funcionando si falla.
 
 Para reemplazos o assets futuros:
 

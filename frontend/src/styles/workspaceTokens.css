@@ -1,0 +1,75 @@
+/* Calm Workspace: one internal theme, independent of the retained home preference.
+   Tokens live at root so body-portaled menus share the same visual contract. */
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400 700; font-display: swap; src: url("/fonts/inter-latin.woff2") format("woff2"); }
+@font-face { font-family: "Manrope"; font-style: normal; font-weight: 600 700; font-display: swap; src: url("/fonts/manrope-latin.woff2") format("woff2"); }
+@font-face { font-family: "Caveat"; font-style: normal; font-weight: 400 500; font-display: swap; src: url("/fonts/caveat-latin.woff2") format("woff2"); }
+:root {
+  --bg-app: #EDF3EF;
+  --bg-app-deep: #E5EEE9;
+  --browser-chrome: #DCE8E2;
+  --surface: #F8F7F0;
+  --surface-elevated: #FCFAF4;
+  --surface-secondary: #E5EFE9;
+  --surface-hover: #D7E6DE;
+  --border: #CBD9D2;
+  --border-strong: #ADC4B8;
+  --text-primary: #173A34;
+  --text-secondary: #586F65;
+  --text-muted: #81928C;
+  --text-on-canvas: #536B63;
+  --primary: #0D6258;
+  --primary-hover: #084E47;
+  --primary-active: #063E38;
+  --primary-soft: #D8EBE4;
+  --primary-soft-hover: #C9E0D5;
+  --focus: #7CCABD;
+  --accent: #C49A58;
+  --accent-soft: #F0E2C9;
+  --sage: #91AD9F;
+  --sage-light: #DCE9E2;
+  --warm-paper: #F8F4E9;
+  --input-surface: #FCFBF6;
+  --input-border: #C6D6CE;
+  --secondary-button: #EEF2ED;
+  --chip-surface: #DFEBE5;
+  --chip-border: #BDD2C7;
+  --chip-text: #24574D;
+  --quote-ink: #58746A;
+  --success: #32866D;
+  --success-soft: #DDEEE6;
+  --warning: #C08A39;
+  --warning-soft: #F3E6CD;
+  --danger: #BE5966;
+  --danger-soft: #F4DEE1;
+  --info: #4C80A3;
+  --info-soft: #DFEAF1;
+  /* Darker foreground variants meet contrast on soft status backgrounds. */
+  --success-text: #216748;
+  --warning-text: #80521B;
+  --danger-text: #A03B4B;
+  --info-text: #2A5D88;
+  --font-heading: "Manrope", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-editorial: "Caveat", "Segoe Print", cursive;
+  --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem;
+  --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+  --space-12: 3rem; --space-16: 4rem;
+  --radius-sm: 8px; --radius-control: 10px; --radius-card: 16px; --radius-panel: 18px;
+  --shadow-sm: 0 2px 8px rgba(24,51,45,.04);
+  --shadow-md: 0 10px 28px rgba(32,64,55,.055);
+  --shadow-lg: 0 14px 34px rgba(32,64,55,.07);
+  --motion-ease: cubic-bezier(.22,1,.36,1);
+  --motion-micro: 180ms; --motion-panel: 240ms;
+  /* Compatibility names used by the structural styles, not a second theme. */
+  --ui-canvas: var(--bg-app); --ui-surface: var(--surface); --ui-surface-2: var(--surface-secondary);
+  --ui-text: var(--text-primary); --ui-muted: var(--text-secondary);
+  --ui-line: var(--border); --ui-line-strong: var(--border-strong);
+  --ui-accent: var(--primary); --ui-accent-hover: var(--primary-hover);
+  --ui-accent-soft: var(--primary-soft); --ui-on-accent: #F8FAF7;
+  --ui-success: var(--success-text); --ui-success-soft: var(--success-soft);
+  --ui-warning: var(--warning-text); --ui-warning-soft: var(--warning-soft);
+  --ui-danger: var(--danger-text); --ui-danger-soft: var(--danger-soft);
+  --ui-violet: var(--primary); --ui-violet-soft: var(--primary-soft);
+  --ui-shadow-ink: #18332D; --ui-shadow: var(--shadow-md); --ui-shadow-lift: var(--shadow-lg);
+  --ui-ring: rgba(13,98,88,.11); --ui-ease: var(--motion-ease);
+}

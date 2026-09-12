@@ -1,6 +1,6 @@
 # 3D asset licensing and publication gate
 
-[Español](licensing.es.md) · Last reviewed: 2026-08-17
+[Español](licensing.es.md) · Last reviewed: 2026-08-29
 
 This is an engineering compliance checklist, not legal advice. The exact terms
 accepted when each file was acquired control.
@@ -59,7 +59,7 @@ Examples of restrictive stock terms:
 
 ## Evidence recorded per model
 
-Each of the five local slots records:
+Each delivered 3D slot records:
 
 1. author/rightsholder and original source URL;
 2. exact license name/version, stable text/permalink, and retrieval date;
@@ -85,6 +85,12 @@ Terrarium** by Seafoam under CC BY 4.0. It is
 `included_local_noncommercial` and `publishable: true` with required
 attribution. The validator checks path, size, SHA-256, evidence, animation, and
 fallback declarations.
+
+The manifest also records `UKLELESONG.mp3` and `ame.png`, both supplied by the
+project owner with explicit authorization for inclusion and redistribution in
+AmeWork. Their checksum, size, original filename, and license boundary remain
+separate from the source code. Audio is optional and playback failure never
+blocks the application.
 
 For a replacement or future asset:
 

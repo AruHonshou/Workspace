@@ -31,7 +31,9 @@ def clean_text(value: str | None) -> str:
 
 
 def content_hash(title: str, company: str, description: str) -> str:
-    canonical = "|".join(clean_text(part).casefold() for part in (title, company, description))
+    canonical = "|".join(
+        clean_text(part).casefold() for part in (title, company, description)
+    )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
@@ -55,7 +57,8 @@ def normalize_manual_job(data: ManualJobCreate) -> JobRecord:
         date_confidence="exact" if data.posted_at else "unknown",
         verification_level=(
             "manual_portal"
-            if data.source in {
+            if data.source
+            in {
                 SourceKind.LINKEDIN,
                 SourceKind.INDEED,
                 SourceKind.GLASSDOOR,
@@ -107,7 +110,8 @@ def normalize_job(
         date_confidence="exact" if posted_at else "unknown",
         verification_level=(
             "authorized_feed"
-            if source in {
+            if source
+            in {
                 SourceKind.JOBICY,
                 SourceKind.REMOTIVE,
                 SourceKind.REMOTE_OK,
@@ -133,7 +137,9 @@ def deduplicate_jobs(jobs: Iterable[JobRecord]) -> list[JobRecord]:
         if existing_index is not None:
             existing = result[existing_index]
             merged_sources = list(
-                dict.fromkeys([*existing.sources, existing.source, *job.sources, job.source])
+                dict.fromkeys(
+                    [*existing.sources, existing.source, *job.sources, job.source]
+                )
             )
             preferred = (
                 job
@@ -165,7 +171,9 @@ def rank_job(job: JobRecord, profile: Profile) -> RankedJob:
 
     desired = [*preferences.keywords, *preferences.desired_titles]
     matches = [item for item in desired if item.casefold() in job_text]
-    excluded = [item for item in preferences.excluded_keywords if item.casefold() in job_text]
+    excluded = [
+        item for item in preferences.excluded_keywords if item.casefold() in job_text
+    ]
     requirement_tokens = _tokens(job.description)
     overlap = profile_tokens & requirement_tokens
 
@@ -189,7 +197,9 @@ def rank_job(job: JobRecord, profile: Profile) -> RankedJob:
     elif preferences.desired_locations:
         if not job.location.strip():
             eligible = None
-            criteria.append(CriterionResult(name="location", status=MatchStatus.UNKNOWN))
+            criteria.append(
+                CriterionResult(name="location", status=MatchStatus.UNKNOWN)
+            )
         elif any(
             location.casefold() in job.location.casefold()
             for location in preferences.desired_locations
@@ -201,7 +211,9 @@ def rank_job(job: JobRecord, profile: Profile) -> RankedJob:
             for marker in ("anywhere", "global", "remote", "worldwide")
         ):
             eligible = None
-            criteria.append(CriterionResult(name="location", status=MatchStatus.UNKNOWN))
+            criteria.append(
+                CriterionResult(name="location", status=MatchStatus.UNKNOWN)
+            )
         else:
             logistics = 0.0
             eligible = False
@@ -211,7 +223,9 @@ def rank_job(job: JobRecord, profile: Profile) -> RankedJob:
         if job.salary_max is None:
             if eligible is True:
                 eligible = None
-            criteria.append(CriterionResult(name="salary_floor", status=MatchStatus.UNKNOWN))
+            criteria.append(
+                CriterionResult(name="salary_floor", status=MatchStatus.UNKNOWN)
+            )
         elif (
             preferences.currency
             and job.salary_currency
@@ -229,9 +243,13 @@ def rank_job(job: JobRecord, profile: Profile) -> RankedJob:
         elif job.salary_max < preferences.minimum_salary:
             eligible = False
             logistics = 0.0
-            criteria.append(CriterionResult(name="salary_floor", status=MatchStatus.GAP))
+            criteria.append(
+                CriterionResult(name="salary_floor", status=MatchStatus.GAP)
+            )
         else:
-            criteria.append(CriterionResult(name="salary_floor", status=MatchStatus.MATCH))
+            criteria.append(
+                CriterionResult(name="salary_floor", status=MatchStatus.MATCH)
+            )
 
     if preferences.work_authorization:
         if eligible is True:
@@ -284,6 +302,10 @@ def rank_jobs(jobs: Iterable[JobRecord], profile: Profile) -> list[RankedJob]:
     ranked = [rank_job(job, profile) for job in jobs]
     return sorted(
         ranked,
-        key=lambda item: (item.eligible is not False, item.score, item.breakdown.confidence),
+        key=lambda item: (
+            item.eligible is not False,
+            item.score,
+            item.breakdown.confidence,
+        ),
         reverse=True,
     )

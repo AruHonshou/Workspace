@@ -4,27 +4,28 @@
 
 ## La búsqueda no inicia
 
-Confirma el CV y configura DeepSeek en **Configuración**. Configura también
-TheirStack para la cobertura principal. Un `401/403` indica una clave rechazada;
-un `402` suele indicar créditos insuficientes y un `429`, límite temporal.
+Confirma al menos un CV y elige país y rol válidos. DeepSeek no es necesario para buscar. Si no hay proveedor de pago configurado, las fuentes de respaldo pueden devolver menos resultados. Comprueba cobertura antes de gastar créditos.
 
-## No aparecen ofertas
+Los códigos se muestran sin filtrar secretos: `401/403` es clave rechazada, `402` plan/créditos insuficientes y `429` cuota temporal. Una página cobrable no se reintenta sola; vuelve a solicitarla sólo después de resolver la causa.
 
-Prueba un rol más amplio. El resultado excluye fechas desconocidas, publicaciones
-de más de 30 días, vacantes cerradas y empleos no ubicados en Costa Rica. Revisa
-que TheirStack esté configurado y tenga créditos. Si falla, la interfaz usa las
-fuentes de respaldo y avisa que la cobertura es limitada.
+## No aparecen vacantes
 
-## Un portal no aparece integrado
+Prueba un rol amplio, quita la ciudad o habilita remoto mundial. Los resultados nuevos exigen hora exacta dentro de siete días y enlace HTTPS válido. La cobertura varía por país/proveedor y la interfaz nunca afirma cubrir todo Internet.
 
-LinkedIn, Indeed, Glassdoor y Computrabajo se abren manualmente. Copia la fecha,
-URL y descripción mediante **Importar una vacante encontrada**.
+## Falta un portal
 
-## Animación o WebGL falla
+LinkedIn, Indeed, Glassdoor, Computrabajo, Naukri y similares sólo aparecen mediante proveedor autorizado, API/feed oficial o enlace aportado por el usuario. AmeWork no los scrapea directamente ni usa sesiones iniciadas.
 
-Actualiza el controlador gráfico y confirma que `ame-terrarium.glb` y
-`ame-terrarium-poster.svg` existen en `frontend/public/models`. La aplicación
-muestra automáticamente el fallback estático si WebGL falla. Movimiento reducido
-mantiene una pose estable.
+## Una función de IA no está disponible
 
-Ejecuta `./scripts/diagnose.ps1` y `./scripts/test.ps1` para un diagnóstico local.
+La búsqueda y los resúmenes deterministas siguen funcionando. Para análisis profundo, CV ATS, guía o LinkedIn, valida DeepSeek, concede el consentimiento mostrado y confirma un CV en el idioma de la oferta.
+
+## Falla el almacén de credenciales
+
+Windows usa Credential Manager, macOS Keychain y Linux Secret Service/libsecret. En contenedores sin escritorio, inyecta `*_API_KEY` o monta un archivo y configura `*_API_KEY_FILE`; los secretos inyectados son de sólo lectura en la UI.
+
+## Falla WebGL
+
+La aplicación cambia automáticamente a su imagen estática. Todos los formularios siguen funcionando sin WebGL ni animación.
+
+Ejecuta `./scripts/diagnose.ps1`, `./scripts/test.ps1` y `./scripts/scan-secrets.ps1` para diagnóstico local.

@@ -6,13 +6,19 @@ param(
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$venvPython = Join-Path $repoRoot '.venv\Scripts\python.exe'
+$pythonCandidates = @(
+    (Join-Path $repoRoot '.venv\Scripts\python.exe'),
+    (Join-Path $repoRoot '.venv/bin/python'),
+    (Join-Path $repoRoot 'backend/.venv\Scripts\python.exe'),
+    (Join-Path $repoRoot 'backend/.venv/bin/python')
+)
+$venvPython = $pythonCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
 if (-not $OutputPath) {
-    $OutputPath = Join-Path $repoRoot 'artifacts\career-orchestrator.sbom.cdx.json'
+    $OutputPath = Join-Path $repoRoot 'output/sbom/amework-global.cdx.json'
 }
 $resolvedOutput = [System.IO.Path]::GetFullPath($OutputPath)
 $outputDirectory = Split-Path -Parent $resolvedOutput
-if (-not (Test-Path -LiteralPath $venvPython -PathType Leaf)) {
+if (-not $venvPython) {
     throw 'Python virtual environment missing. Run ./scripts/bootstrap.ps1 first.'
 }
 if (-not (Test-Path -LiteralPath $outputDirectory -PathType Container)) {
@@ -35,7 +41,21 @@ function Add-Component {
     })
 }
 
-$pythonPackages = (& $venvPython -m pip list --format=json | ConvertFrom-Json)
+$uv = Get-Command uv -ErrorAction SilentlyContinue | Select-Object -First 1
+if (-not $uv) {
+    $localUv = Join-Path $repoRoot '.venv\Scripts\uv.exe'
+    if (Test-Path -LiteralPath $localUv -PathType Leaf) {
+        $uv = Get-Item -LiteralPath $localUv
+    }
+}
+if ($uv) {
+    $uvExecutable = if ($uv.PSObject.Properties['Source']) { $uv.Source } else { $uv.FullName }
+    $pythonInventory = @(& $uvExecutable pip list --python $venvPython --format=json) -join "`n"
+} else {
+    $pythonInventory = @(& $venvPython -m pip list --format=json) -join "`n"
+}
+if ($LASTEXITCODE -ne 0) { throw 'Python dependency inventory failed.' }
+$pythonPackages = ($pythonInventory | ConvertFrom-Json)
 foreach ($package in $pythonPackages) {
     $name = [string]$package.name
     $version = [string]$package.version
@@ -76,7 +96,7 @@ $bom = [ordered]@{
         timestamp = (Get-Date).ToUniversalTime().ToString('o')
         component = [ordered]@{
             type = 'application'
-            name = 'career-orchestrator'
+            name = 'amework-global'
             version = '0.1.0'
         }
     }

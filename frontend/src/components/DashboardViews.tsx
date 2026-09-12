@@ -1,43 +1,67 @@
-import React, { useMemo, useState } from "react";
-import type { ManualJobInput } from "../api/client";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Translate } from "../i18n";
+import { useFloatingMenu } from "../hooks/useFloatingMenu";
+import { useWorkspaceActive } from "../app/WorkspaceActivity";
+import { FactDisclosure } from "./FactDisclosure";
 import type {
   CandidateProfile,
-  DeepFitAnalysis,
   DeepSeekStatus,
-  Interest,
-  JobRecord,
   ProfileFact,
   TheirStackStatus,
 } from "../types";
+type FilterOption = { value: string; label: string; glyph?: string };
 
-function formatDate(value: string, locale: string): string {
-  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+
+function splitList(value: string): string[] {
+  return [...new Set(value.split(/[,;\n]/).map((item) => item.trim()).filter(Boolean))];
 }
 
-export function ProfileView({ profile, t, locale, onImport, onUpdateFact, onConfirm }: {
+function PreferenceListInput({ items, onChange, placeholder }: { items: string[]; onChange: (items: string[]) => void; placeholder?: string }) {
+  const [value, setValue] = useState(items.join(", "));
+  useEffect(() => setValue(items.join(", ")), [items]);
+  return <input value={value} onChange={(event) => setValue(event.target.value)} onBlur={() => onChange(splitList(value))} placeholder={placeholder} />;
+}
+
+export function ProfileView({ profile, profiles, profileLoadError, t, locale, onReloadProfiles, onSelectProfile, onCreateProfile, onRenameProfile, onDuplicateProfile, onDeleteProfile, onUpdatePreferences, onImport, onUpdateFact, onConfirm, onReprocess, onCloudConsent }: {
   profile: CandidateProfile;
+  profiles: CandidateProfile[];
+  profileLoadError?: string | null;
   t: Translate;
   locale: "es" | "en";
-  onImport: (file: File, language: "es" | "en") => Promise<void>;
+  onReloadProfiles?: () => Promise<void>;
+  onSelectProfile: (profileId: string) => Promise<void>;
+  onCreateProfile: (displayName: string) => Promise<void>;
+  onRenameProfile: (displayName: string) => Promise<void>;
+  onDuplicateProfile: () => Promise<void>;
+  onDeleteProfile: () => Promise<void>;
+  onUpdatePreferences: (preferences: CandidateProfile["preferences"]) => Promise<void>;
+  onImport: (file: File, language: string) => Promise<void>;
   onUpdateFact: (fact: ProfileFact, text: string) => Promise<void>;
   onConfirm: () => Promise<void>;
+  onReprocess: () => Promise<void>;
+  onCloudConsent: (granted: boolean) => Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [profileAction, setProfileAction] = useState<"create" | "rename" | "delete" | null>(null);
+  const [profileName, setProfileName] = useState("");
+  const [profileActionError, setProfileActionError] = useState<string | null>(null);
+  const [preferenceDraft, setPreferenceDraft] = useState(profile.preferences);
+  useEffect(() => setPreferenceDraft(profile.preferences), [profile.id, profile.preferences]);
   const grouped = useMemo(() => {
-    const order: ProfileFact["category"][] = ["experience", "skill", "education", "achievement", "preference"];
+    const order: ProfileFact["category"][] = ["experience", "project", "skill", "education", "certification", "achievement", "preference"];
     return order
       .map((category) => ({ category, facts: profile.facts.filter((fact) => fact.category === category) }))
       .filter((group) => group.facts.length);
   }, [profile.facts]);
   const labels: Record<ProfileFact["category"], string> = locale === "es"
-    ? { experience: "Experiencia", skill: "Habilidades", education: "Educación", achievement: "Logros", preference: "Preferencias" }
-    : { experience: "Experience", skill: "Skills", education: "Education", achievement: "Achievements", preference: "Preferences" };
-  const hasBothResumes = Boolean(profile.resumes.es && profile.resumes.en);
-  const step = !hasBothResumes ? 1 : profile.confirmed ? 3 : 2;
-  const importFile = async (file: File | undefined, language: "es" | "en") => {
+    ? { experience: "Experiencia", project: "Proyectos", skill: "Habilidades", education: "Educación", certification: "Certificaciones", achievement: "Logros", preference: "Preferencias" }
+    : { experience: "Experience", project: "Projects", skill: "Skills", education: "Education", certification: "Certifications", achievement: "Achievements", preference: "Preferences" };
+  const hasResume = Object.keys(profile.resumes).length > 0;
+  const step = !hasResume ? 1 : profile.confirmed ? 3 : 2;
+  const importFile = async (file: File | undefined, language: string) => {
     if (!file) return;
     setBusy(true);
     try { await onImport(file, language); } finally { setBusy(false); }
@@ -45,27 +69,51 @@ export function ProfileView({ profile, t, locale, onImport, onUpdateFact, onConf
 
   return (
     <section className="view-section career-profile">
+      <div className="profile-console" aria-label={locale === "es" ? "Administrar perfiles" : "Manage profiles"}>
+        <div className="profile-console-screen" data-confirmed={profile.confirmed}>
+          <small>{locale === "es" ? "PERFIL ACTIVO" : "ACTIVE PROFILE"}</small>
+          <strong>{profile.displayName || (locale === "es" ? "Sin perfil" : "No profile")}</strong>
+          <span>{profile.confirmed ? (locale === "es" ? "LISTO PARA BUSCAR" : "READY TO SEARCH") : (locale === "es" ? "CONFIGURACIÓN PENDIENTE" : "SETUP PENDING")}</span>
+        </div>
+        {profiles.length > 0 && <FilterSelect compact align="end" icon="▣" label={locale === "es" ? "CAMBIAR PERFIL" : "SWITCH PROFILE"} ariaLabel={locale === "es" ? "Perfil profesional" : "Professional profile"} value={profile.id ?? ""} options={profiles.map((item) => ({ value: item.id ?? "", label: item.displayName, glyph: item.confirmed ? "✓" : "·" }))} onChange={(value) => void onSelectProfile(value)} />}
+        <div className="profile-console-actions">
+          <button type="button" onClick={() => { setProfileActionError(null); setProfileName(""); setProfileAction("create"); }}>＋ {locale === "es" ? "Nuevo" : "New"}</button>
+          <button type="button" disabled={!profile.id} onClick={() => { setProfileActionError(null); setProfileName(profile.displayName); setProfileAction("rename"); }}>✎ {locale === "es" ? "Renombrar" : "Rename"}</button>
+          <button type="button" disabled={!profile.id} onClick={() => void onDuplicateProfile()}>⧉ {locale === "es" ? "Duplicar" : "Duplicate"}</button>
+          <button type="button" className="danger" disabled={!profile.id} onClick={() => { setProfileActionError(null); setProfileAction("delete"); }}>× {locale === "es" ? "Eliminar" : "Delete"}</button>
+        </div>
+      </div>
+
+      {profileLoadError && <div role="alert"><span>{locale === "es" ? "No se pudieron cargar tus perfiles." : "Your profiles could not be loaded."}</span>{onReloadProfiles && <button type="button" className="text-button" disabled={busy} onClick={async () => { setBusy(true); try { await onReloadProfiles(); } catch { /* The visible alert remains until a retry succeeds. */ } finally { setBusy(false); } }}>{locale === "es" ? "Reintentar" : "Retry"}</button>}</div>}
+
+      {profileAction && <div className={`profile-action-card ${profileAction === "delete" ? "danger" : ""}`} role="dialog" aria-modal="true" aria-label={locale === "es" ? "Administrar perfil" : "Manage profile"}>
+        <div><small>{locale === "es" ? "PERFIL PROFESIONAL" : "PROFESSIONAL PROFILE"}</small><strong>{profileAction === "create" ? (locale === "es" ? "Crear perfil profesional" : "Create professional profile") : profileAction === "rename" ? (locale === "es" ? "Renombrar perfil" : "Rename profile") : (locale === "es" ? "Eliminar perfil y sus datos" : "Delete profile and its data")}</strong></div>
+        {profileAction === "delete" ? <p>{locale === "es" ? `Se eliminarán los CV, hechos, análisis y documentos vinculados a “${profile.displayName}”. Tus Favoritos permanecerán guardados. Esta acción no se puede deshacer.` : `Résumés, facts, analyses, and documents linked to “${profile.displayName}” will be deleted. Your Favorites remain saved. This cannot be undone.`}</p> : <input autoFocus maxLength={60} value={profileName} onChange={(event) => setProfileName(event.target.value)} placeholder={locale === "es" ? "Ej. QA Automation" : "e.g. QA Automation"} />}
+        {profileActionError && <p role="alert">{profileActionError}</p>}
+        <div><button type="button" className={profileAction === "delete" ? "danger-button" : "primary-action"} disabled={busy || (profileAction !== "delete" && profileName.trim().length < 2)} onClick={async () => { setBusy(true); setProfileActionError(null); try { if (profileAction === "create") await onCreateProfile(profileName.trim()); else if (profileAction === "rename") await onRenameProfile(profileName.trim()); else await onDeleteProfile(); setProfileAction(null); } catch (error) { setProfileActionError(error instanceof Error ? error.message : String(error)); } finally { setBusy(false); } }}>{profileAction === "delete" ? (locale === "es" ? "Sí, eliminar" : "Yes, delete") : (locale === "es" ? "Guardar" : "Save")}</button><button type="button" className="text-button" disabled={busy} onClick={() => setProfileAction(null)}>{t("common.cancel")}</button></div>
+      </div>}
+
       <div className="view-heading">
         <div>
           <span className="eyebrow">01 · {locale === "es" ? "Tu historia profesional" : "Your professional story"}</span>
           <h2>{t("profile.title")}</h2>
-          <p>{locale === "es" ? "Convierte tu CV en hechos verificables. Los agentes sólo podrán usar aquello que confirmes." : "Turn your résumé into verifiable facts. Agents can only use what you confirm."}</p>
+          <p>{locale === "es" ? "Convierte tu CV en hechos verificables. Las herramientas de IA sólo podrán usar aquello que confirmes." : "Turn your résumé into verifiable facts. AI tools can only use what you confirm."}</p>
         </div>
         <span className={`profile-state ${profile.confirmed ? "confirmed" : "pending"}`}>{profile.confirmed ? t("profile.confirmed") : t("profile.pending")}</span>
       </div>
 
       <ol className="profile-steps" aria-label={locale === "es" ? "Progreso del CV" : "Résumé progress"}>
         {[locale === "es" ? "Importar" : "Import", locale === "es" ? "Revisar" : "Review", locale === "es" ? "Confirmar" : "Confirm"].map((label, index) => (
-          <li key={label} className={step >= index + 1 ? "active" : ""}>
-            <span>{step > index + 1 ? "✓" : index + 1}</span><strong>{label}</strong>
+          <li key={label} className={step >= index + 1 ? "active" : ""} data-step={profile.confirmed || step > index + 1 ? "completed" : step === index + 1 ? "current" : "pending"} aria-current={!profile.confirmed && step === index + 1 ? "step" : undefined}>
+            <span>{profile.confirmed || step > index + 1 ? "✓" : index + 1}</span><strong>{label}</strong>
           </li>
         ))}
       </ol>
 
-      <div className="resume-language-intro"><strong>{locale === "es" ? "Necesitas las dos versiones" : "Both versions are required"}</strong><span>{locale === "es" ? "Usaremos automáticamente el CV que coincida con el idioma de cada vacante." : "We automatically use the résumé matching each job's language."}</span></div>
+      <div className="resume-language-intro"><strong>{locale === "es" ? "Elige el CV que representa este perfil" : "Choose the résumé that represents this profile"}</strong><span>{locale === "es" ? "Puedes mantener una versión en español, en inglés o ambas. Cada documento se revisa de forma independiente." : "You can keep a Spanish version, an English version, or both. Each document is reviewed independently."}</span></div>
       <div className="bilingual-resumes">
         {(["es", "en"] as const).map((language) => {
-          const resume = profile.resumes[language];
+          const resume = profile.resumes[language] ?? Object.entries(profile.resumes).find(([key]) => key.split("-", 1)[0] === language)?.[1];
           const label = language === "es" ? (locale === "es" ? "CV en español" : "Spanish résumé") : (locale === "es" ? "CV en inglés" : "English résumé");
           return <label key={language} className={`resume-language-card ${resume ? "is-ready" : "is-missing"}`}>
             <span className="resume-language-code">{language.toUpperCase()}</span>
@@ -85,11 +133,31 @@ export function ProfileView({ profile, t, locale, onImport, onUpdateFact, onConf
             <div><small>{locale === "es" ? "Revisados" : "Reviewed"}</small><strong>{profile.facts.filter((fact) => fact.verified).length}/{profile.facts.length}</strong></div>
             <div className="profile-readiness"><span>{profile.completion}%</span><div><small>{t("profile.status")}</small><strong>{profile.confirmed ? t("profile.ready") : t("profile.review")}</strong></div></div>
           </div>
+          {profile.confirmed && profile.redactedPreview && <section className={`cloud-consent-card ${profile.cloudConsentValid ? "is-granted" : ""}`}>
+            <header><span aria-hidden="true">{profile.cloudConsentValid ? "✓" : "☁"}</span><div><small>DEEPSEEK · {locale === "es" ? "CONSENTIMIENTO EXPLÍCITO" : "EXPLICIT CONSENT"}</small><strong>{profile.cloudConsentValid ? (locale === "es" ? "Procesamiento seguro habilitado" : "Safe processing enabled") : (locale === "es" ? "Revisa qué datos pueden enviarse" : "Review what may be sent")}</strong></div></header>
+            <p>{locale === "es" ? "El PDF original, correo y teléfono nunca se envían. Sólo esta vista profesional redactada se usará para análisis y documentos que tú solicites." : "The original file, email, and phone are never sent. Only this redacted professional preview is used for analyses and documents you request."}</p>
+            <details><summary>{locale === "es" ? "Ver vista exacta para DeepSeek" : "View the exact DeepSeek preview"}</summary><pre>{profile.redactedPreview.redacted_text}</pre></details>
+            <div className="cloud-consent-actions">
+              {!profile.cloudConsentValid && <button type="button" className="primary-action" disabled={busy} onClick={async () => { setBusy(true); try { await onCloudConsent(true); } finally { setBusy(false); } }}>{locale === "es" ? "Acepto usar esta vista" : "I approve this preview"}</button>}
+              {profile.cloudConsentValid && <button type="button" className="secondary-button" disabled={busy} onClick={async () => { setBusy(true); try { await onCloudConsent(false); } finally { setBusy(false); } }}>{locale === "es" ? "Revocar consentimiento" : "Revoke consent"}</button>}
+              <span>{locale === "es" ? "Puedes cambiar esta decisión cuando quieras." : "You can change this decision at any time."}</span>
+            </div>
+          </section>}
+          <details className="profile-preferences">
+            <summary><span>⌁</span><div><strong>{locale === "es" ? "Preferencias y filtro seguro" : "Preferences and safe filter"}</strong><small>{locale === "es" ? "Sólo separan incompatibilidades explícitas; una tecnología ausente nunca oculta una vacante." : "Only explicit conflicts are separated; a missing technology never hides a job."}</small></div></summary>
+            <div className="preference-grid">
+              <label><span>{locale === "es" ? "Roles objetivo" : "Target roles"}</span><PreferenceListInput items={preferenceDraft.desiredTitles} onChange={(items) => setPreferenceDraft({ ...preferenceDraft, desiredTitles: items })} placeholder="QA Engineer, SDET" /></label>
+              <label><span>{locale === "es" ? "Ubicaciones aceptadas" : "Accepted locations"}</span><PreferenceListInput items={preferenceDraft.desiredLocations} onChange={(items) => setPreferenceDraft({ ...preferenceDraft, desiredLocations: items })} placeholder="Bogotá, Remote worldwide" /></label>
+              <fieldset><legend>{locale === "es" ? "Seniority" : "Seniority"}</legend>{["internship", "entry", "junior", "mid", "senior", "lead", "manager", "director", "executive"].map((value) => <label key={value}><input type="checkbox" checked={preferenceDraft.targetSeniorities.includes(value)} onChange={(event) => setPreferenceDraft({ ...preferenceDraft, targetSeniorities: event.target.checked ? [...preferenceDraft.targetSeniorities, value] : preferenceDraft.targetSeniorities.filter((item) => item !== value) })} />{value}</label>)}</fieldset>
+              <fieldset><legend>{locale === "es" ? "Modalidades" : "Work modes"}</legend>{(["remote", "hybrid", "onsite"] as const).map((value) => <label key={value}><input type="checkbox" checked={preferenceDraft.allowedWorkModes.includes(value)} onChange={(event) => setPreferenceDraft({ ...preferenceDraft, allowedWorkModes: event.target.checked ? [...preferenceDraft.allowedWorkModes, value] : preferenceDraft.allowedWorkModes.filter((item) => item !== value) })} />{value === "onsite" ? (locale === "es" ? "presencial" : "on-site") : value === "hybrid" ? (locale === "es" ? "híbrido" : "hybrid") : (locale === "es" ? "remoto" : "remote")}</label>)}</fieldset>
+              <label><span>{locale === "es" ? "Palabras excluidas" : "Excluded keywords"}</span><PreferenceListInput items={preferenceDraft.excludedKeywords} onChange={(items) => setPreferenceDraft({ ...preferenceDraft, excludedKeywords: items })} placeholder={locale === "es" ? "ventas, guardias" : "sales, on-call"} /></label>
+              <label><span>{locale === "es" ? "Sectores excluidos" : "Excluded sectors"}</span><PreferenceListInput items={preferenceDraft.excludedSectors} onChange={(items) => setPreferenceDraft({ ...preferenceDraft, excludedSectors: items })} placeholder={locale === "es" ? "apuestas" : "gambling"} /></label>
+            </div>
+            <button type="button" className="secondary-button" onClick={() => void onUpdatePreferences(preferenceDraft)}>{locale === "es" ? "Guardar preferencias" : "Save preferences"}</button>
+          </details>
           <div className="fact-groups">
             {grouped.map((group) => (
-              <section key={group.category}>
-                <header><span>{labels[group.category]}</span><b>{group.facts.length}</b></header>
-                <div className="fact-review-list">
+              <FactDisclosure key={`${profile.id}-${group.category}`} title={labels[group.category]} verified={group.facts.filter((fact) => fact.verified).length} locale={locale}>
                   {group.facts.map((fact) => (
                     <article key={fact.id}>
                       <div className="fact-status" aria-label={fact.verified ? "Verificado" : "Pendiente"}>{fact.verified ? "✓" : "•"}</div>
@@ -106,13 +174,13 @@ export function ProfileView({ profile, t, locale, onImport, onUpdateFact, onConf
                       {editing !== fact.id && <button type="button" className="edit-fact" onClick={() => { setEditing(fact.id); setDraft(fact.text); }} aria-label={`${t("common.edit")}: ${fact.text}`}>✎</button>}
                     </article>
                   ))}
-                </div>
-              </section>
+              </FactDisclosure>
             ))}
           </div>
           <div className="profile-actions">
-            {!profile.confirmed && <button type="button" className="primary-action" disabled={busy || profile.facts.length === 0 || !hasBothResumes} onClick={async () => { setBusy(true); try { await onConfirm(); } finally { setBusy(false); } }}>{busy ? t("profile.confirming") : t("profile.confirm")}</button>}
-            {!hasBothResumes && <span className="profile-requirement">{locale === "es" ? "Importa ambos CV para poder confirmar el perfil." : "Upload both résumés to confirm the profile."}</span>}
+            {hasResume && <button type="button" className="secondary-button" disabled={busy} onClick={async () => { const accepted = window.confirm(locale === "es" ? "Se reagruparán los hechos extraídos y tendrás que revisarlos y confirmar nuevamente el perfil. Tus archivos originales se conservarán. ¿Continuar?" : "Extracted facts will be regrouped and you will need to review and confirm the profile again. Your original files will be preserved. Continue?"); if (!accepted) return; setBusy(true); try { await onReprocess(); } finally { setBusy(false); } }}>{locale === "es" ? "Optimizar extracción" : "Optimize extraction"}</button>}
+            {!profile.confirmed && <button type="button" className="primary-action" disabled={busy || profile.facts.length === 0 || !hasResume} onClick={async () => { setBusy(true); try { await onConfirm(); } finally { setBusy(false); } }}>{busy ? t("profile.confirming") : t("profile.confirm")}</button>}
+            {!hasResume && <span className="profile-requirement">{locale === "es" ? "Importa un CV en español o inglés para confirmar el perfil." : "Upload a Spanish or English résumé to confirm the profile."}</span>}
           </div>
         </>
       )}
@@ -120,115 +188,162 @@ export function ProfileView({ profile, t, locale, onImport, onUpdateFact, onConf
   );
 }
 
-export function SearchView({ profileReady, deepSeekReady, theirStackReady = false, t, locale, onStart, onManualImport }: {
-  profileReady: boolean;
-  deepSeekReady: boolean;
-  theirStackReady?: boolean;
-  t: Translate;
-  locale: "es" | "en";
-  onStart: (role: string) => Promise<void>;
-  onManualImport: (input: ManualJobInput) => Promise<void>;
+
+export function FilterSelect({ icon, label, ariaLabel, value, options, onChange, layout = "floating", disabled = false, compact = false, align = "start" }: {
+  icon: string;
+  label: string;
+  ariaLabel: string;
+  value: string;
+  options: FilterOption[];
+  onChange: (value: string) => void;
+  layout?: "floating" | "inline";
+  disabled?: boolean;
+  compact?: boolean;
+  align?: "start" | "end";
 }) {
-  const [role, setRole] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [manualOpen, setManualOpen] = useState(false);
-  const [manual, setManual] = useState<ManualJobInput>({ title: "", company: "", description: "", location: "Costa Rica", remote: false, source: "linkedin", url: "", posted_at: "" });
-  const portals = [
-    ["LinkedIn", `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(role)}&location=Costa%20Rica`],
-    ["Indeed", `https://cr.indeed.com/jobs?q=${encodeURIComponent(role)}`],
-    ["Glassdoor", `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encodeURIComponent(role)}`],
-    ["Computrabajo", `https://cr.computrabajo.com/trabajo-de-${encodeURIComponent(role.toLowerCase().replace(/\s+/g, "-"))}`],
-  ];
+  const [open, setOpen] = useState(false);
+  const [renderMenu, setRenderMenu] = useState(false);
+  const workspaceActive = useWorkspaceActive();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuId = useId();
+  const matchedIndex = options.findIndex((option) => option.value === value);
+  const selectedIndex = Math.max(0, matchedIndex);
+  const hasSelection = matchedIndex >= 0 && value !== "";
+  const selected = hasSelection
+    ? options[matchedIndex]
+    : { value: "", label: "Seleccionar…", glyph: "·" };
+  const floatingMenu = useFloatingMenu({
+    open: workspaceActive && renderMenu && layout === "floating",
+    triggerRef,
+    minWidth: compact ? 224 : 248,
+    maxWidth: compact ? 300 : 440,
+    estimatedHeight: Math.min(compact ? 250 : 370, 50 + options.length * (compact ? 38 : 46)),
+    align,
+  });
+
+  useEffect(() => {
+    if (!workspaceActive) { setOpen(false); setRenderMenu(false); return; }
+    if (!open) return undefined;
+    const closeOutside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!rootRef.current?.contains(target) && !menuRef.current?.contains(target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    menuRef.current?.focus();
+    return () => document.removeEventListener("pointerdown", closeOutside);
+  }, [open, workspaceActive]);
+  useEffect(() => {
+    if (!workspaceActive) return;
+    if (open) {
+      setRenderMenu(true);
+      const frame = window.requestAnimationFrame(() => menuRef.current?.focus());
+      return () => window.cancelAnimationFrame(frame);
+    }
+    if (!renderMenu) return undefined;
+    const timer = window.setTimeout(() => setRenderMenu(false), 145);
+    return () => window.clearTimeout(timer);
+  }, [open, renderMenu, workspaceActive]);
+  useEffect(() => {
+    if (!workspaceActive || !open || !options[activeIndex]) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const option = menuRef.current
+        ?.querySelectorAll<HTMLElement>('[role="option"]')[activeIndex];
+      option?.scrollIntoView?.({ block: "nearest" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeIndex, menuId, open, options, workspaceActive]);
+
+  const openMenu = (index = selectedIndex) => {
+    if (!options.length) return;
+    setActiveIndex(index);
+    setOpen(true);
+  };
+  const choose = (option: FilterOption) => {
+    onChange(option.value);
+    setOpen(false);
+    triggerRef.current?.focus();
+  };
+  const move = (direction: number) => {
+    setActiveIndex((current) => (current + direction + options.length) % options.length);
+  };
+
+  const menu = workspaceActive && renderMenu ? (
+    <div
+      ref={menuRef}
+      id={menuId}
+      className={`filter-menu${layout === "floating" ? " is-portal" : ""}${compact ? " is-compact" : ""} is-placement-${floatingMenu.placement}${open ? " is-entering" : " is-closing"}`}
+      style={layout === "floating" ? floatingMenu.style : undefined}
+      role="listbox"
+      aria-label={ariaLabel}
+      aria-activedescendant={`${menuId}-option-${activeIndex}`}
+      tabIndex={-1}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowDown") { event.preventDefault(); move(1); }
+        else if (event.key === "ArrowUp") { event.preventDefault(); move(-1); }
+        else if (event.key === "Home") { event.preventDefault(); setActiveIndex(0); }
+        else if (event.key === "End") { event.preventDefault(); setActiveIndex(options.length - 1); }
+        else if (event.key === "Enter" || event.key === " ") { event.preventDefault(); choose(options[activeIndex]); }
+        else if (event.key === "Escape") { event.preventDefault(); setOpen(false); triggerRef.current?.focus(); }
+        else if (event.key === "Tab") setOpen(false);
+      }}
+    >
+      <span className="filter-menu-caption" aria-hidden="true">{label}</span>
+      {options.map((option, index) => (
+        <button
+          id={`${menuId}-option-${index}`}
+          type="button"
+          role="option"
+          aria-selected={option.value === value}
+          className={`${option.value === value ? "is-selected" : ""}${index === activeIndex ? " is-active" : ""}`}
+          key={option.value}
+          onPointerEnter={() => setActiveIndex(index)}
+          onClick={() => choose(option)}
+        >
+          <span className="filter-option-glyph" aria-hidden="true">{option.glyph}</span>
+          <span>{option.label}</span>
+          <b aria-hidden="true">{option.value === value ? "✓" : ""}</b>
+        </button>
+      ))}
+    </div>
+  ) : null;
+
   return (
-    <section className="view-section career-search">
-      <div className="view-heading"><div><span className="eyebrow">02 · {locale === "es" ? "Explorar oportunidades" : "Explore opportunities"}</span><h2>{t("search.title")}</h2><p>{locale === "es" ? "Escribe un rol. Ame ampliará los términos y buscará vacantes recientes en Costa Rica." : "Enter a role. Ame will expand the terms and search recent Costa Rica openings."}</p></div></div>
-      <div className="source-hero"><div className="source-mark">TS</div><div><strong>{theirStackReady ? (locale === "es" ? "TheirStack está conectado" : "TheirStack is connected") : (locale === "es" ? "Búsqueda con fuentes de respaldo" : "Fallback source search")}</strong><p>{theirStackReady ? (locale === "es" ? "La primera tanda recupera hasta 25 vacantes de Costa Rica." : "The first batch retrieves up to 25 Costa Rica jobs.") : (locale === "es" ? "Configura TheirStack para incluir LinkedIn, Indeed, Glassdoor, Computrabajo y miles de sitios." : "Configure TheirStack to include LinkedIn, Indeed, Glassdoor, Computrabajo, and thousands of sites.")}</p></div><span className={theirStackReady ? "connected" : "limited"}>{theirStackReady ? "✓" : "!"}</span></div>
-      <div className="scope-pills"><span>🇨🇷 Costa Rica</span><span>🗓️ {locale === "es" ? "Últimos 30 días" : "Last 30 days"}</span><span>25 · {locale === "es" ? "por tanda" : "per batch"}</span></div>
-      <form className="role-search-form" onSubmit={async (event) => { event.preventDefault(); if (!role.trim() || !profileReady || !deepSeekReady) return; setBusy(true); try { await onStart(role.trim()); } finally { setBusy(false); } }}>
-        <label htmlFor="role-query">{t("search.roleLabel")}</label>
-        <div className="search-console"><span className="console-prefix" aria-hidden="true">AME://</span><input id="role-query" value={role} onChange={(event) => setRole(event.target.value)} placeholder={t("search.rolePlaceholder")} autoFocus /><button type="submit" disabled={busy || !profileReady || !deepSeekReady || role.trim().length < 2}>{busy ? t("search.searching") : t("search.start")}</button></div>
-        <small>{t("search.aliasHint")}</small>
-      </form>
-      {!profileReady && <div className="inline-warning">{t("search.profileRequired")}</div>}
-      {!deepSeekReady && <div className="inline-warning">{locale === "es" ? "Configura tu API key de DeepSeek antes de buscar." : "Configure your DeepSeek API key before searching."}</div>}
-      <details className="portal-searches">
-        <summary>{locale === "es" ? "Búsqueda manual e importación" : "Manual search and import"}</summary>
-        <p>{locale === "es" ? "Abre los portales directamente o importa una publicación que hayas encontrado." : "Open job portals directly or import a posting you found."}</p>
-        <div>{portals.map(([label, href]) => <a key={label} href={href} target="_blank" rel="noreferrer">↗ {label}</a>)}</div>
-        <button type="button" className="secondary-button" onClick={() => setManualOpen((value) => !value)}>{manualOpen ? (locale === "es" ? "Cerrar importador" : "Close importer") : (locale === "es" ? "Importar una vacante" : "Import a job")}</button>
-      </details>
-      {manualOpen && <form className="manual-import" onSubmit={async (event) => { event.preventDefault(); setBusy(true); try { await onManualImport({ ...manual, posted_at: manual.posted_at ? new Date(manual.posted_at).toISOString() : undefined }); setManualOpen(false); } finally { setBusy(false); } }}>
-        <select value={manual.source} onChange={(event) => setManual({ ...manual, source: event.target.value as ManualJobInput["source"] })}><option value="linkedin">LinkedIn</option><option value="indeed">Indeed</option><option value="glassdoor">Glassdoor</option><option value="computrabajo">Computrabajo</option><option value="manual">{locale === "es" ? "Página oficial" : "Official page"}</option></select>
-        <input required placeholder={locale === "es" ? "Nombre del puesto" : "Job title"} value={manual.title} onChange={(event) => setManual({ ...manual, title: event.target.value })} />
-        <input required placeholder={locale === "es" ? "Empresa" : "Company"} value={manual.company} onChange={(event) => setManual({ ...manual, company: event.target.value })} />
-        <input required type="url" placeholder="https://..." value={manual.url} onChange={(event) => setManual({ ...manual, url: event.target.value })} />
-        <label>{locale === "es" ? "Fecha y hora publicadas" : "Publication date and time"}<input required type="datetime-local" value={manual.posted_at} onChange={(event) => setManual({ ...manual, posted_at: event.target.value })} /></label>
-        <input placeholder={locale === "es" ? "Ubicación" : "Location"} value={manual.location} onChange={(event) => setManual({ ...manual, location: event.target.value })} />
-        <label className="manual-remote"><input type="checkbox" checked={manual.remote} onChange={(event) => setManual({ ...manual, remote: event.target.checked })} />{locale === "es" ? "Es remoto" : "Remote role"}</label>
-        <textarea required minLength={40} placeholder={locale === "es" ? "Pega aquí la descripción completa" : "Paste the full description here"} value={manual.description} onChange={(event) => setManual({ ...manual, description: event.target.value })} />
-        <button type="submit" disabled={busy}>{locale === "es" ? "Guardar vacante" : "Save job"}</button>
-      </form>}
-      <p className="search-trust-note">{t("search.trustNote")}</p>
-    </section>
+    <div ref={rootRef} className={`filter-select is-${layout}${open ? " is-open" : ""}${hasSelection && value !== "all" ? " has-value" : ""}`}>
+      <button
+        ref={triggerRef}
+        type="button"
+        className="filter-control"
+        disabled={disabled || !options.length}
+        aria-label={`${ariaLabel}: ${selected.label}`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => open ? setOpen(false) : openMenu()}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            if (!open) openMenu(event.key === "ArrowDown" ? selectedIndex : Math.max(0, selectedIndex - 1));
+            else move(event.key === "ArrowDown" ? 1 : -1);
+          }
+          else if (open && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); choose(options[activeIndex]); }
+          else if (open && event.key === "Escape") { event.preventDefault(); setOpen(false); }
+        }}
+      >
+        <span className="filter-control-icon" aria-hidden="true">{icon}</span>
+        <span className="filter-control-copy"><small>{label}</small><strong>{selected.label}</strong></span>
+        <span className="filter-chevron" aria-hidden="true">⌄</span>
+      </button>
+      {menu && (layout === "floating" ? createPortal(menu, document.body) : menu)}
+    </div>
   );
 }
 
-export function AnalysisPanel({ analysis, t }: { analysis: DeepFitAnalysis; t: Translate }) {
-  return <div className="deep-analysis"><header className="analysis-overview"><div className="analysis-score"><strong>{Math.round(analysis.score)}%</strong><span>{t(`results.level.${analysis.level}`)}</span></div><div><small>{t("analysis.resumeUsed")}</small><strong>{analysis.resume_language === "es" ? t("analysis.spanishResume") : t("analysis.englishResume")}</strong><p>{t("analysis.confirmedOnly")}</p></div></header><section><h4>{t("analysis.matches")}</h4>{analysis.matched_requirements.length ? analysis.matched_requirements.map((item) => <div className="match-row" key={`${item.fact_id}-${item.requirement}`}><strong>{item.requirement}</strong><p>{item.evidence}</p></div>) : <p>{t("analysis.noMatches")}</p>}</section>{analysis.missing_requirements.length > 0 && <section className="analysis-gaps"><h4>{t("analysis.missing")}</h4><ul>{analysis.missing_requirements.map((item, index) => <li key={`missing-${index}-${item}`}>{item}</li>)}</ul></section>}<section><h4>{t("analysis.recommendations")}</h4><ul>{analysis.cv_recommendations.map((item, index) => <li key={`recommendation-${index}-${item}`}>{item}</li>)}</ul></section><div className="analysis-caution">{analysis.cautions.join(" ")}</div></div>;
-}
 
-function FilterControl({ icon, label, children }: { icon: string; label: string; children: React.ReactNode }) {
-  return <div className="filter-control"><span className="filter-control-icon" aria-hidden="true">{icon}</span><label><small>{label}</small>{children}</label><span className="filter-chevron" aria-hidden="true">⌄</span></div>;
-}
-
-export function ResultsView({ jobs, analyses, busyJob, aliases, coverageIncomplete, referenceTime, t, locale, onAnalysis, onInterest, canLoadMore = false, loadingMore = false, totalAvailable = null, onLoadMore }: {
-  jobs: JobRecord[];
-  analyses: Record<string, DeepFitAnalysis>;
-  busyJob: string | null;
-  aliases: string[];
-  coverageIncomplete: boolean;
-  referenceTime?: string;
-  t: Translate;
-  locale: "es" | "en";
-  onAnalysis: (job: JobRecord) => Promise<void>;
-  onInterest: (job: JobRecord) => Promise<void>;
-  canLoadMore?: boolean;
-  loadingMore?: boolean;
-  totalAvailable?: number | null;
-  onLoadMore?: () => Promise<void>;
-}) {
-  const [period, setPeriod] = useState<"24h" | "7d" | "30d">("30d");
-  const [mode, setMode] = useState<"all" | JobRecord["workMode"]>("all");
-  const [source, setSource] = useState("all");
-  const [fit, setFit] = useState<"all" | JobRecord["fitLevel"]>("all");
-  const [visible, setVisible] = useState(24);
-  const anchor = referenceTime ? Date.parse(referenceTime) : Date.now();
-  const sources = useMemo(() => [...new Set(jobs.map((job) => job.sourcePortal || job.source))].sort(), [jobs]);
-  const counts = useMemo(() => ({ "24h": jobs.filter((job) => anchor - Date.parse(job.publishedAt) <= 86_400_000).length, "7d": jobs.filter((job) => anchor - Date.parse(job.publishedAt) <= 604_800_000).length, "30d": jobs.length }), [anchor, jobs]);
-  const filtered = useMemo(() => {
-    const milliseconds = period === "24h" ? 86_400_000 : period === "7d" ? 604_800_000 : 2_592_000_000;
-    return jobs.filter((job) => anchor - Date.parse(job.publishedAt) <= milliseconds && (mode === "all" || job.workMode === mode) && (source === "all" || (job.sourcePortal || job.source) === source) && (fit === "all" || job.fitLevel === fit));
-  }, [anchor, fit, jobs, mode, period, source]);
-
-  if (!jobs.length) return <section className="empty-results"><span>30d</span><h2>{t("results.emptyTitle")}</h2><p>{locale === "es" ? "No encontramos publicaciones verificables de los últimos 30 días para este rol." : "No verifiable postings from the last 30 days were found for this role."}</p>{coverageIncomplete && <div className="inline-warning">{t("results.partialCoverage")}</div>}</section>;
-  return (
-    <section className="view-section career-results">
-      <div className="view-heading"><div><span className="eyebrow">03 · {filtered.length} {t("results.verified")}</span><h2>{t("results.title")}</h2><p>{locale === "es" ? `${jobs.length}${totalAvailable ? ` de ${totalAvailable}` : ""} vacantes recuperadas. Los filtros no consumen créditos.` : `${jobs.length}${totalAvailable ? ` of ${totalAvailable}` : ""} jobs retrieved. Filters use no credits.`}</p></div></div>
-      <div className="result-filterbar"><div className="period-tabs">{(["24h", "7d", "30d"] as const).map((value) => <button type="button" className={period === value ? "active" : ""} key={value} onClick={() => { setPeriod(value); setVisible(24); }}>{value === "7d" ? (locale === "es" ? "7 días" : "7 days") : value === "30d" ? (locale === "es" ? "30 días" : "30 days") : "24 h"}<b>{counts[value]}</b></button>)}</div><div className="filter-control-row"><FilterControl icon="⌂" label={locale === "es" ? "MODALIDAD" : "WORK MODE"}><select aria-label={locale === "es" ? "Modalidad" : "Work mode"} value={mode} onChange={(event) => setMode(event.target.value as typeof mode)}><option value="all">{locale === "es" ? "Toda modalidad" : "All work modes"}</option><option value="remote">{locale === "es" ? "Remoto" : "Remote"}</option><option value="hybrid">{locale === "es" ? "Híbrido" : "Hybrid"}</option><option value="onsite">{locale === "es" ? "Presencial" : "On-site"}</option></select></FilterControl><FilterControl icon="⌁" label={locale === "es" ? "FUENTE" : "SOURCE"}><select aria-label={locale === "es" ? "Fuente" : "Source"} value={source} onChange={(event) => setSource(event.target.value)}><option value="all">{locale === "es" ? "Todas las fuentes" : "All sources"}</option>{sources.map((value) => <option key={value} value={value}>{value}</option>)}</select></FilterControl><FilterControl icon="◎" label={locale === "es" ? "ENCAJE" : "FIT"}><select aria-label={locale === "es" ? "Encaje" : "Fit"} value={fit} onChange={(event) => setFit(event.target.value as typeof fit)}><option value="all">{locale === "es" ? "Todo encaje" : "All fit levels"}</option><option value="high">{t("results.level.high")}</option><option value="medium">{t("results.level.medium")}</option><option value="low">{t("results.level.low")}</option></select></FilterControl></div></div>
-      {aliases.length > 1 && <div className="alias-strip"><strong>{t("results.expandedAs")}</strong>{aliases.map((alias) => <span key={alias}>{alias}</span>)}</div>}
-      {coverageIncomplete && <div className="inline-warning">{t("results.partialCoverage")}</div>}
-      {!filtered.length ? <div className="filter-empty">{locale === "es" ? "No hay vacantes que coincidan con estos filtros." : "No jobs match these filters."}</div> : <div className="job-grid">{filtered.slice(0, visible).map((job) => <article className="job-result-card" key={job.id}><header><div><span>{job.company}</span><h3>{job.title}</h3><small className={`verification-chip ${job.applyUrlType === "portal" ? "portal" : job.verificationLevel}`}>{job.applyUrlType === "portal" ? `${locale === "es" ? "Enlace de portal" : "Portal link"}${job.sourcePortal ? ` · ${job.sourcePortal}` : ""}` : (locale === "es" ? "Enlace de la empresa" : "Company link")}</small></div><div className={`fit-badge fit-${job.fitLevel}`}><strong>{Math.round(job.fitScore)}%</strong><span>{t(`results.level.${job.fitLevel}`)}</span></div></header><div className="job-meta"><span>📍 {job.location}</span><span>🕘 {formatDate(job.publishedAt, locale)}</span><span>✓ {job.sourcePortal || job.source}</span>{job.provider === "theirstack" && <span>via TheirStack</span>}</div><p className="job-description">{job.description}</p>{!!job.requirements.length && <div className="requirements"><strong>{t("results.requirements")}</strong><ul>{job.requirements.slice(0, 4).map((item, index) => <li key={`${job.id}-requirement-${index}`}>{item}</li>)}</ul></div>}<div className="quick-fit"><div><strong>{t("results.strengths")}</strong><p>{job.evidence.join(" · ") || t("results.noEvidence")}</p></div><div><strong>{t("results.gaps")}</strong><p>{job.gaps.join(" · ") || t("results.noClearGaps")}</p></div></div>{analyses[job.id] && <AnalysisPanel analysis={analyses[job.id]} t={t} />}<footer><button type="button" className="secondary-button" disabled={busyJob === job.id} onClick={() => onAnalysis(job)}>{analyses[job.id] ? t("analysis.loaded") : t("results.analysis")}</button><a className="secondary-button apply-link" href={job.officialApplyUrl} target="_blank" rel="noreferrer">{job.applyUrlType === "company" ? t("results.apply") : (locale === "es" ? "Abrir publicación" : "Open posting")}</a><button type="button" className="interest-button" disabled={busyJob === job.id} onClick={() => onInterest(job)}>♥ {busyJob === job.id ? t("results.preparing") : t("results.interested")}</button></footer></article>)}</div>}
-      {visible < filtered.length && <button type="button" className="load-more" onClick={() => setVisible((value) => value + 24)}>{locale === "es" ? `Mostrar más (${filtered.length - visible})` : `Show more (${filtered.length - visible})`}</button>}
-      {canLoadMore && onLoadMore && <div className="provider-load-more"><div><strong>{locale === "es" ? "Hay más oportunidades en TheirStack" : "More opportunities are available in TheirStack"}</strong><span>{locale === "es" ? "La siguiente tanda puede consumir hasta 25 créditos." : "The next batch may consume up to 25 credits."}</span></div><button type="button" disabled={loadingMore} onClick={() => void onLoadMore()}>{loadingMore ? (locale === "es" ? "Recuperando…" : "Retrieving…") : (locale === "es" ? "Cargar 25 más" : "Load 25 more")}</button></div>}
-    </section>
-  );
-}
-
-export function InterestsView({ interests, jobs, t, locale, onDownload, onRemove }: { interests: Interest[]; jobs: JobRecord[]; t: Translate; locale: "es" | "en"; onDownload: (interest: Interest) => void; onRemove: (interest: Interest) => Promise<void> }) {
-  const jobsById = useMemo(() => Object.fromEntries(jobs.map((job) => [job.id, job])), [jobs]);
-  if (!interests.length) return <section className="empty-results"><span>♥</span><h2>{t("interests.emptyTitle")}</h2><p>{t("interests.emptyBody")}</p></section>;
-  return <section className="view-section interest-list"><div className="view-heading"><div><span className="eyebrow">04 · {t("interests.saved")}</span><h2>{t("interests.title")}</h2><p>{t("interests.subtitle")}</p></div></div>{interests.map((interest) => { const job = jobsById[interest.job_id]; const ready = interest.guide_status === "ready" && Boolean(interest.guide_artifact_id); return <article key={interest.interest_id}><div><small>{job?.company ?? interest.company}</small><h3>{job?.title ?? interest.job_title}</h3><span>{formatDate(interest.created_at, locale)} · PDF {interest.guide_language.toUpperCase()}</span><span className={`guide-status ${interest.guide_status}`}>{interest.guide_status === "ready" ? (locale === "es" ? "PDF listo" : "PDF ready") : interest.guide_status === "failed" ? (locale === "es" ? "Error al crear PDF" : "PDF failed") : (locale === "es" ? "Creando PDF…" : "Creating PDF…")}</span>{interest.guide_error && <small className="guide-error">{interest.guide_error}</small>}</div><div><a className="text-button" href={job?.officialApplyUrl ?? interest.official_apply_url} target="_blank" rel="noreferrer">{t("results.apply")}</a><button type="button" className="primary-action" disabled={!ready} onClick={() => onDownload(interest)}>{ready ? t("interests.download") : (locale === "es" ? "Preparando…" : "Preparing…")}</button><button type="button" className="text-button danger" onClick={() => onRemove(interest)}>{t("interests.remove")}</button></div></article>; })}</section>;
-}
 
 function ProviderKeyCard({ provider, description, configured, keyValue, setKeyValue, busy, onSave, onDelete, note, statusDetail, locale }: {
   provider: string;
@@ -249,7 +364,7 @@ function ProviderKeyCard({ provider, description, configured, keyValue, setKeyVa
   return <article className={`provider-card ${configured ? "is-connected" : ""}`}><div className="provider-circuit" aria-hidden="true"><i /><i /><i /><i /></div><header><div className="provider-logo">{provider.slice(0, 2).toUpperCase()}</div><div><strong>{provider}</strong><p>{description}</p></div><span className={configured ? "configured" : "missing"}><i />{configured ? "ONLINE" : "OFFLINE"}</span></header><form onSubmit={(event) => { event.preventDefault(); void onSave(); }}><label className="api-key-field"><span>API ACCESS KEY</span><input aria-label={`${provider} API key`} type="password" autoComplete="off" value={keyValue} onChange={(event) => setKeyValue(event.target.value)} placeholder="•••• •••• •••• ••••" /></label><button type="submit" disabled={busy || keyValue.trim().length < 8}>{busy ? "…" : saveLabel}</button></form><div className="provider-details"><small>{note}</small>{statusDetail && <span className="credit-balance">{statusDetail}</span>}</div>{configured && <button type="button" className="text-button danger" onClick={() => void onDelete()}>{locale === "es" ? "Eliminar clave guardada" : "Delete saved key"}</button>}</article>;
 }
 
-export function SettingsView({ t, locale, deepSeekStatus, theirStackStatus, onSaveDeepSeek, onDeleteDeepSeek, onSaveTheirStack, onDeleteTheirStack }: {
+export function SettingsView({ t, locale, deepSeekStatus, theirStackStatus, onSaveDeepSeek, onDeleteDeepSeek, onSaveTheirStack, onDeleteTheirStack, onExportData, onDeleteData }: {
   t: Translate;
   locale: "es" | "en";
   deepSeekStatus: DeepSeekStatus | null;
@@ -258,6 +373,8 @@ export function SettingsView({ t, locale, deepSeekStatus, theirStackStatus, onSa
   onDeleteDeepSeek: () => Promise<void>;
   onSaveTheirStack: (key: string) => Promise<void>;
   onDeleteTheirStack: () => Promise<void>;
+  onExportData: () => Promise<void>;
+  onDeleteData: () => Promise<void>;
 }) {
   const [deepSeekKey, setDeepSeekKey] = useState("");
   const [theirStackKey, setTheirStackKey] = useState("");
@@ -269,5 +386,14 @@ export function SettingsView({ t, locale, deepSeekStatus, theirStackStatus, onSa
       ? (locale === "es" ? `${theirStackStatus.api_credits} créditos API disponibles` : `${theirStackStatus.api_credits} API credits available`)
       : (locale === "es" ? "Conexión validada" : "Connection validated")
     : undefined;
-  return <section className="view-section settings-view"><div className="view-heading"><div><span className="eyebrow">{locale === "es" ? "Conexiones y privacidad" : "Connections and privacy"}</span><h2>{t("settings.title")}</h2><p>{locale === "es" ? "Las claves se validan y guardan exclusivamente en el Administrador de credenciales de Windows." : "Keys are validated and stored exclusively in Windows Credential Manager."}</p></div></div>{error && <div className="inline-warning">{error}</div>}<div className="provider-grid"><ProviderKeyCard provider="TheirStack" locale={locale} description={locale === "es" ? "Búsqueda de vacantes en Costa Rica" : "Costa Rica job search"} configured={Boolean(theirStackStatus?.configured)} keyValue={theirStackKey} setKeyValue={setTheirStackKey} busy={busy === "theirstack"} onSave={() => perform("theirstack", async () => { await onSaveTheirStack(theirStackKey); setTheirStackKey(""); })} onDelete={() => perform("theirstack", onDeleteTheirStack)} note={locale === "es" ? "25 vacantes por tanda. Cada vacante devuelta puede consumir 1 crédito." : "25 jobs per batch. Each returned job may consume 1 credit."} statusDetail={creditStatus} /><ProviderKeyCard provider="DeepSeek" locale={locale} description={locale === "es" ? "Análisis del CV y guías de entrevista" : "Résumé analysis and interview guides"} configured={Boolean(deepSeekStatus?.configured)} keyValue={deepSeekKey} setKeyValue={setDeepSeekKey} busy={busy === "deepseek"} onSave={() => perform("deepseek", async () => { await onSaveDeepSeek(deepSeekKey); setDeepSeekKey(""); })} onDelete={() => perform("deepseek", onDeleteDeepSeek)} note={locale === "es" ? "Sólo recibe hechos profesionales confirmados, nunca tu PDF ni datos de contacto." : "Receives only confirmed professional facts, never your PDF or contact details."} statusDetail={deepSeekStatus?.configured ? (locale === "es" ? "Conexión validada" : "Connection validated") : undefined} /></div><div className="settings-cards"><article><span>⌂</span><div><strong>{t("settings.cvTitle")}</strong><p>{locale === "es" ? "El CV original, la base de datos y las guías permanecen en este equipo." : "The original résumé, database, and guides remain on this computer."}</p></div></article><article><span>↗</span><div><strong>{t("settings.applicationsTitle")}</strong><p>{t("settings.applications")}</p></div></article></div></section>;
+  return <section className="view-section settings-view">
+    <div className="view-heading"><div><span className="eyebrow">{locale === "es" ? "Conexiones y privacidad" : "Connections and privacy"}</span><h2>{t("settings.title")}</h2><p>{locale === "es" ? "Las claves se validan y guardan en el almacén seguro del sistema operativo; nunca regresan al navegador." : "Keys are validated and stored in the operating system secure vault; they are never returned to the browser."}</p></div></div>
+    {error && <div className="inline-warning">{error}</div>}
+    <div className="provider-grid">
+      <ProviderKeyCard provider="TheirStack" locale={locale} description={locale === "es" ? "Proveedor principal de búsqueda por país" : "Primary country-based search provider"} configured={Boolean(theirStackStatus?.configured)} keyValue={theirStackKey} setKeyValue={setTheirStackKey} busy={busy === "theirstack"} onSave={() => perform("theirstack", async () => { await onSaveTheirStack(theirStackKey); setTheirStackKey(""); })} onDelete={() => perform("theirstack", onDeleteTheirStack)} note={locale === "es" ? "Hasta 20 vacantes por página. Cada resultado devuelto puede consumir un crédito." : "Up to 20 jobs per page. Each returned result may consume one credit."} statusDetail={creditStatus} />
+      <ProviderKeyCard provider="DeepSeek" locale={locale} description={locale === "es" ? "Análisis, CV ATS, guías y LinkedIn" : "Analysis, ATS résumés, guides, and LinkedIn"} configured={Boolean(deepSeekStatus?.configured)} keyValue={deepSeekKey} setKeyValue={setDeepSeekKey} busy={busy === "deepseek"} onSave={() => perform("deepseek", async () => { await onSaveDeepSeek(deepSeekKey); setDeepSeekKey(""); })} onDelete={() => perform("deepseek", onDeleteDeepSeek)} note={locale === "es" ? "Sólo recibe hechos profesionales confirmados y redactados, nunca el PDF original ni datos de contacto." : "Receives only redacted, confirmed professional facts—never the original PDF or contact details."} statusDetail={deepSeekStatus?.configured ? (locale === "es" ? "Conexión validada" : "Connection validated") : undefined} />
+    </div>
+    <section className="local-data-console"><header><span>DATA://LOCAL</span><div><strong>{locale === "es" ? "Tus datos, bajo tu control" : "Your data, under your control"}</strong><p>{locale === "es" ? "Exporta una copia JSON o elimina perfiles, búsquedas, favoritos y documentos locales." : "Export a JSON copy or delete local profiles, searches, favorites, and documents."}</p></div></header><div><button type="button" disabled={busy !== null} onClick={() => void perform("export-data", onExportData)}>{locale === "es" ? "Exportar mis datos" : "Export my data"}</button><div className="danger-zone"><strong>{locale === "es" ? "Zona de riesgo" : "Danger zone"}</strong><button type="button" className="danger-button" disabled={busy !== null} onClick={() => { const approved = window.confirm(locale === "es" ? "Esto eliminará permanentemente todos los datos locales de Workspace. Las claves del sistema operativo no se eliminan. ¿Continuar?" : "This permanently deletes all local Workspace data. Operating-system credentials are not deleted. Continue?"); if (approved) void perform("delete-data", onDeleteData); }}>{locale === "es" ? "Borrar todos los datos" : "Delete all data"}</button></div></div></section>
+    <div className="settings-cards"><article><span>⌂</span><div><strong>{t("settings.cvTitle")}</strong><p>{locale === "es" ? "El CV original, la base de datos y las guías permanecen en este equipo." : "The original résumé, database, and guides remain on this computer."}</p></div></article><article><span>↗</span><div><strong>{t("settings.applicationsTitle")}</strong><p>{t("settings.applications")}</p></div></article></div>
+  </section>;
 }

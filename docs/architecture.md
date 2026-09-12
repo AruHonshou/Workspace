@@ -1,26 +1,36 @@
-# Architecture
+# AmeWork 2 architecture
 
-[Español](architecture.es.md)
+AmeWork is a local-first React and FastAPI application. SQLite stores profiles,
+confirmed evidence, searches, normalized jobs, favorites and generated documents.
+The browser uses REST for commands and reads; no automation logs into a job portal
+or submits an application.
 
-AmeWork uses FastAPI, SQLite, LangGraph, and a React/Three.js UI. The
-browser communicates only with FastAPI on localhost through REST and SSE.
+## Active product flow
 
-The `StateGraph` coordinates five internal roles: coordination, search, fit
-analysis, preparation, and review. LangChain creates the agents with
-`deepseek-v4-pro`; filtering, deduplication, ranking, time limits, evidence
-selection, and PDF rendering remain deterministic.
+1. `/buscar` sends a role, country, publication window and selected portals to
+   `JobSearchService`. A CV and an AI key are not required.
+2. `TheirStackProvider` supplies portal listings and `BreteProvider` supplies the
+   Costa Rican public-employment source. Providers fail independently.
+3. Deterministic normalization, canonical URL selection and cross-source
+   deduplication create stored jobs. Identical searches use a short-lived SQLite
+   cache; additional pages are fetched only after an explicit click.
+4. `/favoritos` stores a job locally. Its detail page may combine that job with a
+   selected profile for gap analysis, interview preparation or an ATS résumé.
+5. `DeepSeekProvider` performs schema-validated completions directly through the
+   official API. Pydantic models and evidence validators reject unsupported
+   personal claims before a document is rendered.
+6. `/linkedin` extracts a user-provided LinkedIn PDF locally, runs deterministic
+   checks, then optionally requests evidence-bound improvements from DeepSeek.
 
-TheirStack is the primary Costa Rica connector. It retrieves 25 jobs per batch,
-caches each page, and preserves provider, source portal, source URL, final URL,
-and link type. Greenhouse, Lever, Ashby, Himalayas, We Work Remotely, Jobicy,
-Remotive, and Remote OK remain fallbacks. Portals without an authorized
-integration can also open for manual import.
+## Boundaries
 
-Separate DeepSeek and TheirStack keys live in Windows Credential Manager. The backend sends only
-confirmed professional facts without contact details, the necessary job text,
-and typed JSON contracts. Prompts, reasoning, and secrets never enter SSE.
+- TheirStack receives only search criteria, never a CV.
+- DeepSeek receives only the confirmed professional facts needed for an explicit
+  AI operation; contact details and original documents stay local.
+- Credentials live in the operating-system credential vault or a runtime secret,
+  never in SQLite or browser storage.
+- The 3D scene is presentation only. All product functions work without WebGL.
 
-React renders one scene: Ame's animated terrarium as the visible orchestrator.
-The five graph roles are not rendered as avatars or conversations. The scene
-supports constrained rotation, zoom, and pan and uses a static SVG fallback when
-WebGL or motion is unavailable.
+The public API is generated in `frontend/src/generated/openapi.json`. Historical
+database fields are retained solely so existing installations can migrate without
+losing data; they are not public AmeWork 2 routes.

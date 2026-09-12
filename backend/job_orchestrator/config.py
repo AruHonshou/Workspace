@@ -17,10 +17,9 @@ class Settings(BaseSettings):
     data_dir: Path = Field(default=Path(".local/job-orchestrator"))
     artifact_dir: Path | None = None
     database_path: Path | None = None
-    replay_delay_ms: int = Field(default=0, ge=0, le=10_000)
     host: str = "127.0.0.1"
     port: int = Field(default=8765, ge=1, le=65535)
-    deepseek_base_url: str = "https://api.deepseek.com/anthropic"
+    deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-v4-pro"
     deepseek_reasoning_effort: str = "high"
     deepseek_max_concurrency: int = Field(default=1, ge=1, le=4)
@@ -30,8 +29,6 @@ class Settings(BaseSettings):
     theirstack_base_url: str = "https://api.theirstack.com"
     theirstack_batch_size: int = Field(default=25, ge=1, le=25)
     request_timeout_seconds: float = Field(default=120.0, gt=0)
-    max_connector_results: int = Field(default=2_000, ge=100, le=10_000)
-    career_ats_boards: list[str] = Field(default_factory=list)
     session_token: str = Field(default_factory=lambda: token_urlsafe(32))
     cors_origins: list[str] = Field(
         default_factory=lambda: ["http://127.0.0.1:5173", "http://localhost:5173"]
@@ -50,10 +47,6 @@ class Settings(BaseSettings):
         if value.casefold() not in {"127.0.0.1", "localhost", "::1"}:
             raise ValueError("Career Orchestrator may only bind to a loopback address")
         return value
-
-    @property
-    def checkpoints_path(self) -> Path:
-        return self.data_dir / "checkpoints.db"
 
     @property
     def resolved_database_path(self) -> Path:

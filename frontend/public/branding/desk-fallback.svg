@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" fill="none" role="img" aria-labelledby="desk-title desk-description">
+  <title id="desk-title">A quiet desk, seen from your seat</title>
+  <desc id="desk-description">A dark ultrawide monitor centered over a wooden desk, with a compact ivory and sage keyboard, a mouse and coffee on the right, and plants and a warm lamp at the edges.</desc>
+  <defs>
+    <linearGradient id="room" x1="800" y1="0" x2="800" y2="690" gradientUnits="userSpaceOnUse"><stop stop-color="#101b21"/><stop offset="1" stop-color="#283a39"/></linearGradient>
+    <radialGradient id="room-light" cx=".45" cy=".65" r=".65"><stop stop-color="#8ea595" stop-opacity=".19"/><stop offset="1" stop-color="#8ea595" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lamp-glow"><stop stop-color="#efd4a0" stop-opacity=".2"/><stop offset="1" stop-color="#efd4a0" stop-opacity="0"/></radialGradient>
+    <linearGradient id="wood" x1="800" y1="620" x2="800" y2="1000" gradientUnits="userSpaceOnUse"><stop stop-color="#927453"/><stop offset=".5" stop-color="#9c7956"/><stop offset="1" stop-color="#73563f"/></linearGradient>
+    <linearGradient id="bezel" x1="334" y1="203" x2="1260" y2="626" gradientUnits="userSpaceOnUse"><stop stop-color="#606b68"/><stop offset=".3" stop-color="#253230"/><stop offset=".74" stop-color="#182321"/><stop offset="1" stop-color="#46534d"/></linearGradient>
+    <linearGradient id="stand" x1="769" y1="613" x2="829" y2="688" gradientUnits="userSpaceOnUse"><stop stop-color="#414e46"/><stop offset="1" stop-color="#1d2926"/></linearGradient>
+    <linearGradient id="keyboard-case" x1="600" y1="700" x2="600" y2="848" gradientUnits="userSpaceOnUse"><stop stop-color="#7a8b76"/><stop offset="1" stop-color="#364b41"/></linearGradient>
+    <linearGradient id="key-top" x1="0" y1="0" x2="0" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#e9e8d6"/><stop offset="1" stop-color="#c7ccbb"/></linearGradient>
+    <linearGradient id="sage-key-top" x1="0" y1="0" x2="0" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#93a78d"/><stop offset="1" stop-color="#6f8a72"/></linearGradient>
+    <linearGradient id="ceramic" x1="1297" y1="674" x2="1360" y2="708" gradientUnits="userSpaceOnUse"><stop stop-color="#eee6cd"/><stop offset=".6" stop-color="#c7c4ac"/><stop offset="1" stop-color="#9b9f8b"/></linearGradient>
+    <linearGradient id="pot" x1="82" y1="570" x2="180" y2="639" gradientUnits="userSpaceOnUse"><stop stop-color="#727c65"/><stop offset="1" stop-color="#3b5146"/></linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="60" y2="70" gradientUnits="userSpaceOnUse"><stop stop-color="#7c9472"/><stop offset="1" stop-color="#354e3d"/></linearGradient>
+    <g id="key">
+      <rect y="4" width="28" height="24" rx="4" fill="#778574"/><rect width="28" height="23" rx="4" fill="url(#key-top)"/>
+      <path d="M5 6h5" stroke="#788877" stroke-width="1.5" stroke-linecap="round" opacity=".75"/>
+    </g>
+    <g id="sage-key">
+      <rect y="4" width="28" height="24" rx="4" fill="#496350"/><rect width="28" height="23" rx="4" fill="url(#sage-key-top)"/>
+      <path d="M5 6h5" stroke="#d0d7bf" stroke-width="1.5" stroke-linecap="round" opacity=".65"/>
+    </g>
+    <g id="key-row">
+      <use href="#key"/><use href="#key" x="32"/><use href="#key" x="64"/><use href="#key" x="96"/><use href="#key" x="128"/><use href="#key" x="160"/>
+      <use href="#key" x="192"/><use href="#key" x="224"/><use href="#key" x="256"/><use href="#key" x="288"/><use href="#key" x="320"/><use href="#key" x="352"/>
+    </g>
+    <g id="plant-leaf">
+      <path d="M0 70C-4 33 12 3 50 0 52 37 34 66 0 70Z" fill="url(#leaf)"/>
+      <path d="M2 68 42 10" stroke="#9aab89" stroke-width="1.4" opacity=".3"/>
+    </g>
+  </defs>
+
+  <!-- Original vector room and tabletop, from a seated first-person camera. -->
+  <path fill="url(#room)" d="M0 0h1600v1000H0z"/>
+  <ellipse cx="800" cy="460" rx="850" ry="570" fill="url(#room-light)"/>
+  <path d="M0 591h1600" stroke="#506057" stroke-opacity=".12"/>
+  <path d="M40 0v615M1558 0v615" stroke="#071319" stroke-opacity=".18" stroke-width="3"/>
+  <ellipse cx="226" cy="467" rx="300" ry="310" fill="url(#lamp-glow)"/>
+  <path d="M104 620h1392l175 380H-71Z" fill="url(#wood)"/>
+  <path d="M103 621h1394" stroke="#c0a282" stroke-opacity=".5" stroke-width="3"/>
+  <g stroke="#4f3627" stroke-opacity=".17">
+    <path d="M48 683c319 8 604-18 875-5s412 14 646 5"/>
+    <path d="M19 725c348 11 576-15 846-3s448 19 728 1"/>
+    <path d="M0 806c337-20 592 19 881 7s491-10 719-2"/>
+    <path d="M0 880c267 17 582-9 837-4s541 10 763 1"/>
+    <path d="M0 957c311-18 455 5 756 0s550-13 844-2"/>
+  </g>
+  <g stroke="#d8b088" stroke-opacity=".12">
+    <path d="M125 649c307 3 454-8 659 0s421 7 657 1"/>
+    <path d="M0 773c288 8 560-7 858 0s458 13 742-1"/>
+    <path d="M0 914c290-9 557 1 803-2s575 12 797-3"/>
+  </g>
+
+  <!-- The lamp and foliage stay at the edges of the monitor's usable screen. -->
+  <ellipse cx="231" cy="643" rx="81" ry="15" fill="#263126" opacity=".3"/>
+  <ellipse cx="226" cy="630" rx="53" ry="12" fill="#3f5145"/>
+  <ellipse cx="226" cy="625" rx="49" ry="11" fill="#778271"/>
+  <path d="M226 624V402" stroke="#9b9f85" stroke-width="8"/>
+  <path d="M227 624V402" stroke="#c7c6a6" stroke-opacity=".45" stroke-width="2"/>
+  <path d="m194 326-37 73q70 23 139 0l-37-73Z" fill="#b8bca0"/>
+  <path d="m193 329-34 69q66 19 132 0l-34-69" stroke="#e0ddbe" stroke-opacity=".33" stroke-width="2"/>
+  <ellipse cx="226" cy="326" rx="33" ry="7" fill="#d0d1b5"/>
+  <ellipse cx="226" cy="399" rx="66" ry="12" fill="#e9d7ac"/>
+  <ellipse cx="226" cy="401" rx="47" ry="6" fill="#f1dfb7" opacity=".65"/>
+
+  <ellipse cx="109" cy="653" rx="75" ry="16" fill="#23372c" opacity=".3"/>
+  <path d="M112 590c-3-79-21-126-20-181m24 178c21-78 34-100 58-134m-62 134c-29-69-58-100-69-116" stroke="#637a56" stroke-width="5"/>
+  <use href="#plant-leaf" transform="translate(69 387) rotate(-14) scale(.9)"/>
+  <use href="#plant-leaf" transform="translate(42 438) rotate(-70) scale(.82)"/>
+  <use href="#plant-leaf" transform="translate(98 484) rotate(15) scale(.86)"/>
+  <use href="#plant-leaf" transform="translate(61 497) rotate(-69) scale(.82)"/>
+  <use href="#plant-leaf" transform="translate(141 427) rotate(21) scale(.79)"/>
+  <path d="m66 581 12 59q33 22 66 0l12-59Z" fill="url(#pot)"/>
+  <ellipse cx="111" cy="581" rx="45" ry="12" fill="#8b9479"/>
+  <ellipse cx="111" cy="580" rx="37" ry="8" fill="#354232"/>
+  <path d="m80 594 8 40m9-38 4 44" stroke="#a3ac90" stroke-opacity=".18" stroke-width="2"/>
+
+  <ellipse cx="1491" cy="669" rx="80" ry="16" fill="#223327" opacity=".35"/>
+  <path d="M1487 609c-4-74-13-129-6-211m10 210c18-62 30-108 60-145m-63 142c-21-60-34-90-53-114" stroke="#5c7554" stroke-width="5"/>
+  <use href="#plant-leaf" transform="translate(1456 382) rotate(-5) scale(.94)"/>
+  <use href="#plant-leaf" transform="translate(1437 445) rotate(-68) scale(.84)"/>
+  <use href="#plant-leaf" transform="translate(1505 482) rotate(13) scale(.92)"/>
+  <use href="#plant-leaf" transform="translate(1459 526) rotate(-66) scale(.84)"/>
+  <use href="#plant-leaf" transform="translate(1530 438) rotate(27) scale(.82)"/>
+  <path d="m1442 605 12 48q35 24 69 0l13-48Z" fill="#56634e"/>
+  <ellipse cx="1489" cy="605" rx="47" ry="13" fill="#889074"/>
+  <ellipse cx="1489" cy="604" rx="39" ry="9" fill="#354331"/>
+  <path d="m1456 620 6 28m11-25 3 30" stroke="#a8ad8d" stroke-opacity=".16" stroke-width="2"/>
+
+  <!-- Neutral, logo-free ultrawide monitor. Keep its screen empty for the UI. -->
+  <ellipse cx="802" cy="687" rx="311" ry="29" fill="#28362c" opacity=".35"/>
+  <path d="m773 608-12 74h78l-12-74Z" fill="url(#stand)"/>
+  <path d="m777 620-8 58" stroke="#768070" stroke-opacity=".25" stroke-width="2"/>
+  <path d="m765 672-113 32 2 10 146-15 146 15 2-10-113-32Z" fill="#22312b"/>
+  <path d="m765 672-113 32 148-14 148 14-113-32Z" fill="#4a584b"/>
+  <path d="m657 704 143-14 143 14" stroke="#819078" stroke-opacity=".26"/>
+  <path d="M336 200c299 11 629 11 928 0q16 0 16 17v392q0 17-16 18c-299-12-629-12-928 0-12 0-17-8-17-18V217q0-17 17-17Z" fill="#111d1c" stroke="#151f1e" stroke-width="7"/>
+  <path d="M337 202c298 11 628 11 926 0 9 0 15 6 15 16v390q0 16-15 17c-298-12-628-12-926 0-10 0-16-7-16-17V218q0-16 16-16Z" fill="url(#bezel)"/>
+  <path d="M335 204c305 11 625 11 930 0" stroke="#a8b09e" stroke-opacity=".25" stroke-width="1.5"/>
+  <rect x="337" y="217" width="926" height="391" rx="7" fill="#061116"/>
+  <rect x="340" y="220" width="920" height="385" rx="5" fill="#101c23"/>
+  <path d="M343 607h914" stroke="#899682" stroke-opacity=".16"/>
+  <circle cx="1237" cy="615" r="1.8" fill="#b1c59c" opacity=".8"/>
+
+  <!-- Compact mechanical keyboard with individually raised ivory/sage keys. -->
+  <path d="m489 725 541 1 33 132-604-1Z" fill="#27372c" opacity=".3"/>
+  <path d="m510 703 505 1 32 135q1 11-10 11H490q-11 0-9-11Z" fill="#30473b"/>
+  <path d="m510 701 505 1 30 130q2 9-9 9H491q-9 0-8-9Z" fill="url(#keyboard-case)" stroke="#a0aa8c" stroke-opacity=".4" stroke-width="2"/>
+  <path d="M506 713h513l26 116q1 6-7 6H493q-7 0-5-6Z" fill="#374b3e"/>
+  <g transform="translate(518 714) scale(1.12 .78)">
+    <use href="#sage-key"/><use href="#key-row" x="32"/><use href="#sage-key" x="416"/>
+    <g transform="translate(-7 33) scale(1.03 1)"><use href="#sage-key"/><use href="#key-row" x="32"/><use href="#sage-key" x="416"/></g>
+    <g transform="translate(-14 66) scale(1.06 1)"><use href="#sage-key"/><use href="#key-row" x="32"/><use href="#sage-key" x="416"/></g>
+    <g transform="translate(-20 99) scale(1.09 1)">
+      <use href="#sage-key"/><use href="#sage-key" x="32"/><use href="#key" x="64"/><use href="#key" x="96"/><use href="#key" x="128"/>
+      <use href="#key" x="160"/><use href="#key" x="192"/><use href="#key" x="224"/><use href="#key" x="256"/><use href="#key" x="288"/><use href="#key" x="320"/>
+      <use href="#sage-key" x="352"/><use href="#sage-key" x="384"/><use href="#sage-key" x="416"/>
+    </g>
+    <g transform="translate(-25 132) scale(1.12 1)">
+      <use href="#sage-key"/><use href="#sage-key" x="32"/><use href="#sage-key" x="64"/>
+      <rect x="96" y="4" width="220" height="24" rx="4" fill="#748671"/><rect x="96" width="220" height="23" rx="4" fill="#cfd4bf"/>
+      <path d="M113 5h187" stroke="#f0efdd" stroke-opacity=".4"/>
+      <use href="#sage-key" x="320"/><use href="#sage-key" x="352"/><use href="#sage-key" x="384"/><use href="#sage-key" x="416"/>
+    </g>
+  </g>
+
+  <!-- Mouse and coffee are both on the right side of the desk. -->
+  <path d="M1081 754q2-10 13-10h128q11 0 14 10l33 108q4 12-10 12h-185q-13 0-9-12Z" fill="#52634e" opacity=".67"/>
+  <path d="M1090 752h139" stroke="#bcc2a4" stroke-opacity=".17"/>
+  <ellipse cx="1166" cy="815" rx="38" ry="15" fill="#1e3527" opacity=".35"/>
+  <path d="M1132 800c-2-25 5-44 26-46 22-2 34 17 38 41q4 27-28 31-32 2-36-26Z" fill="#9eac91"/>
+  <path d="M1134 795c-1-23 6-40 24-42 20-2 31 14 35 37 2 17-10 27-25 29-16 1-32-6-34-24Z" fill="#c1c8ac"/>
+  <path d="m1160 755 4 30" stroke="#7d9076" stroke-width="1.5"/>
+  <rect x="1158" y="761" width="5" height="15" rx="2.5" fill="#526c56" transform="rotate(-7 1158 761)"/>
+
+  <ellipse cx="1335" cy="723" rx="68" ry="17" fill="#2f3c29" opacity=".29"/>
+  <ellipse cx="1331" cy="714" rx="52" ry="15" fill="#56674f"/>
+  <ellipse cx="1331" cy="711" rx="47" ry="13" fill="#7c896a"/>
+  <path d="M1361 676c35-7 40 32 9 34h-10" stroke="#b7baa1" stroke-width="10"/>
+  <path d="M1364 677c28-3 28 26 7 28" stroke="#dbd8bc" stroke-width="3"/>
+  <path d="M1298 672v29q0 16 33 17 33 0 34-17v-29Z" fill="url(#ceramic)"/>
+  <ellipse cx="1331" cy="672" rx="33" ry="12" fill="#e7dfc4"/>
+  <ellipse cx="1331" cy="673" rx="27" ry="8" fill="#392e24"/>
+  <path d="M1308 674q22 9 45-1" stroke="#8c6d49" stroke-opacity=".5" stroke-width="1.5"/>
+  <path d="M1303 682v17q1 7 9 9" stroke="#fff3d3" stroke-opacity=".22" stroke-width="2" stroke-linecap="round"/>
+  <path d="M1326 650c-10-10 8-16 1-27m14 27c-6-8 7-13 1-20" stroke="#d0d5ba" stroke-opacity=".18" stroke-width="2" stroke-linecap="round"/>
+</svg>

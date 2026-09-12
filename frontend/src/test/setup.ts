@@ -6,7 +6,9 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   localStorage.clear();
-  window.history.replaceState(null, "", "#profile");
+  sessionStorage.clear();
+  delete document.documentElement.dataset.workspaceTheme;
+  window.history.replaceState(null, "", "/");
 });
 
 Object.defineProperty(window, "matchMedia", {

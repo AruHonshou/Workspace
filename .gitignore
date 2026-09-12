@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.pytest-tmp-*/
+.test-tmp-*/
 .ruff_cache/
 .mypy_cache/
 .coverage
@@ -19,6 +21,8 @@ frontend/coverage/
 artifacts/
 exports/
 logs/
+/backend-live.*.log
+/backend/v/
 .local/
 *.db
 *.db-shm
@@ -61,6 +65,7 @@ Desktop.ini
 # Codex working directories are not product files
 work/
 outputs/
+/output/sbom/
 /tmp/
 /.pnpm-store/
 /.uv-cache/

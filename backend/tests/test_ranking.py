@@ -11,7 +11,11 @@ def test_ranking_is_deterministic_and_respects_remote_gate() -> None:
     profile = Profile(
         name="Ada",
         summary="Python and SQL engineer",
-        facts=[ProfileFact(category="skill", text="Built Python APIs with SQL", verified=True)],
+        facts=[
+            ProfileFact(
+                category="skill", text="Built Python APIs with SQL", verified=True
+            )
+        ],
         preferences=UserPreferences(keywords=["Python", "SQL"], remote_required=True),
     )
     job = normalize_manual_job(
@@ -28,8 +32,17 @@ def test_ranking_is_deterministic_and_respects_remote_gate() -> None:
 
 
 def test_deduplicate_jobs() -> None:
-    payload = ManualJobCreate(title="Engineer", company="Acme", description="Build things")
-    assert len(deduplicate_jobs([normalize_manual_job(payload), normalize_manual_job(payload)])) == 1
+    payload = ManualJobCreate(
+        title="Engineer", company="Acme", description="Build things"
+    )
+    assert (
+        len(
+            deduplicate_jobs(
+                [normalize_manual_job(payload), normalize_manual_job(payload)]
+            )
+        )
+        == 1
+    )
 
 
 def test_unknown_constraints_warn_without_rejecting() -> None:

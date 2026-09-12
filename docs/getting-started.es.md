@@ -2,13 +2,8 @@
 
 [English](getting-started.md)
 
-## Requisitos
-
-- Windows 10/11, Python 3.12 y `uv`.
-- Node.js y la versión de pnpm fijada en `package.json`.
-- Una API key con saldo de DeepSeek para el análisis estructurado de agentes.
-- Una API key de TheirStack para la búsqueda principal en Costa Rica.
-- Tesseract sólo para OCR de PDF escaneados.
+Requisitos: Python 3.12 con `uv`, Node.js 22+, la versión fijada de pnpm y
+PowerShell 7. Docker es una alternativa.
 
 ```powershell
 Copy-Item .env.example .env
@@ -16,14 +11,14 @@ Copy-Item .env.example .env
 ./scripts/dev.ps1
 ```
 
-Abre `http://127.0.0.1:5173`. En **Configuración**, pega cada API key en su
-tarjeta y pulsa **Validar y guardar**. Las claves se validan por separado y se
-guardan en el Administrador de credenciales de Windows; no se escriben en `.env`.
+Abre `http://127.0.0.1:5173` y entra a AmeWork. Puedes buscar inmediatamente:
+elige puesto, país, Hoy/7 días/30 días y los portales deseados. TheirStack es
+opcional, pero ofrece la cobertura amplia de portales; Brete/ANE está disponible
+en Costa Rica. Las búsquedas equivalentes usan la caché local y **Cargar más**
+siempre es una acción manual y transparente sobre créditos.
 
-Después importa los CV en español e inglés, revisa y confirma sus hechos, escribe un rol y espera a
-que finalice la primera tanda de hasta 25 vacantes. **Cargar 25 más** solicita y
-cachea la página siguiente; puede consumir hasta 25 créditos de TheirStack. En
-Resultados puedes cambiar entre 24 horas, 7 días y 30 días sin repetir la
-búsqueda. **Me interesa** crea la guía PDF.
-
-El replay sintético funciona sin API key ni red y nunca contiene datos reales.
+Crea y confirma un perfil en **Mi CV** sólo cuando quieras usar herramientas de
+IA. Guarda una vacante, abre su detalle y elige análisis de brechas, guía de
+entrevista o CV ATS. Configura DeepSeek antes; los contactos y PDF originales
+permanecen locales. En LinkedIn puedes importar el PDF de tu perfil y obtener
+mejoras copiables basadas en evidencia. AmeWork nunca postula ni edita LinkedIn.

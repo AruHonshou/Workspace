@@ -1,0 +1,58 @@
+/* First-person entrance. The application pages deliberately keep their styles. */
+.pov-shell .desktop-stage { touch-action: none; cursor: grab; outline-offset: -5px; }
+.pov-shell .desktop-stage:active { cursor: grabbing; }
+.pov-shell .desktop-home-layer::before { background: linear-gradient(180deg, #10191f70, transparent 18%, transparent 88%, #10191f40); }
+.pov-shell .desktop-header { padding-top: 1.3rem; padding-bottom: 1.3rem; }
+.pov-shell .desktop-home-copy {
+  position: absolute; top: 0; left: 0; margin: 0; max-width: none;
+  transform-origin: 0 0; will-change: transform; box-sizing: border-box;
+  display: flex; flex-direction: column; overflow: hidden; padding: 18px 30px 13px;
+  background: radial-gradient(ellipse at 92% 5%, #25473f80, transparent 54%), #101c23;
+  color: #edf3ee; border-radius: 2px; text-align: center; pointer-events: auto;
+  border: 1px solid #3c595a44; backface-visibility: hidden;
+}
+.monitor-home-top { display: flex; justify-content: space-between; align-items: center; min-height: 25px; gap: 1rem; color: #a4b8b1; font-size: 10px; font-weight: 550; letter-spacing: .16em; }
+.monitor-home-top > span:last-child { display: inline-flex; align-items: center; gap: 7px; font-size: 8px; letter-spacing: .12em; }
+.monitor-home-top i { width: 4px; height: 4px; background: #93b99f; border-radius: 50%; }
+.monitor-home-content { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.pov-shell .desktop-eyebrow { justify-content: center; font-size: 10px; letter-spacing: .22em; }
+.pov-shell .desktop-home-copy h1 { margin: 12px 0 10px; font-size: 56px; font-weight: 400; line-height: 1.02; letter-spacing: -.045em; }
+.pov-shell .desktop-home-copy h1 em { color: #b5d2bb; }
+.pov-shell .desktop-home-copy p { margin: 0; max-width: 54ch; color: #b4c4bd; font-size: 16px; line-height: 1.65; }
+.pov-shell .desktop-primary { margin: 18px 0 0; min-height: 50px; padding: 12px 22px; gap: 32px; border-radius: 7px; background: #c2d7c6; font-size: 15px; font-weight: 600; box-shadow: 0 8px 30px #030b0d44; }
+.pov-shell .desktop-primary:hover { background: #e1ecdf; }
+.pov-shell .desktop-primary svg { width: 20px; height: 20px; }
+.pov-shell .desktop-home-note { flex-shrink: 0; margin: 0; padding-top: 8px; font-size: 9px; color: #78958a; }
+.monitor-home[data-compact="true"] { padding: 8px 12px; }
+.monitor-home[data-compact="true"] .monitor-home-top { min-height: 13px; font-size: 8px; }
+.monitor-home[data-compact="true"] .monitor-home-top > span:last-child { font-size: 6px; }
+.pov-shell .monitor-home[data-compact="true"] :is(.desktop-eyebrow, p, .desktop-home-note) { display: none; }
+.pov-shell .monitor-home[data-compact="true"] h1 { margin: 4px 0 8px; font-size: 28px; line-height: 1.02; }
+.pov-shell .monitor-home[data-compact="true"] .desktop-primary { min-height: 54px; margin-top: 0; padding: 10px 18px; font-size: 15px; gap: 14px; }
+.desk-look-controls { position: absolute; bottom: max(22px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 5px; border: 1px solid #acc6bd33; border-radius: 40px; background: #15252bdb; color: #bacbc3; backdrop-filter: blur(16px); pointer-events: auto; }
+.desk-look-controls button { display: grid; place-items: center; width: 36px; min-width: 36px; height: 36px; padding: 0; border: 1px solid transparent; border-radius: 50%; background: #cce0d412; color: #dce9dd; font-size: 19px; line-height: 1; cursor: pointer; transition: color 160ms, background 160ms; }
+.desk-look-controls button:hover:not(:disabled) { background: #cce0d438; color: #fff; }
+.desk-look-controls button:disabled { opacity: .3; cursor: default; }
+.desk-object-links { position: absolute; inset: 0; pointer-events: none; }
+.desk-object-link { position: absolute; z-index: 3; display: grid; place-items: center; min-width: 44px; min-height: 44px; transform: translate(-50%, -50%); border: 1px solid transparent; border-radius: 50%; pointer-events: auto; color: #e3eee4; text-decoration: none; background: transparent; }
+.desk-object-dot { display: grid; place-items: center; position: absolute; right: -3px; top: -6px; width: 20px; height: 20px; border: 1px solid #c6dfca66; border-radius: 50%; color: #d2e6da; background: #19362feb; font-size: 10px; font-weight: 650; box-shadow: 0 2px 12px #0b1c2244; transition: transform 180ms, background 180ms; }
+.desk-object-link:is(:hover, :focus-visible) { border-color: #cce4ce77; background: #b8d4c414; }
+.desk-object-link:is(:hover, :focus-visible) .desk-object-dot { background: #cce0cf; color: #18332b; transform: scale(1.12); }
+.desk-object-tooltip { position: absolute; bottom: calc(100% + 15px); left: 50%; transform: translate(calc(-50% + var(--tooltip-offset, 0px)), 6px); width: max-content; max-width: min(260px, calc(100vw - 32px)); box-sizing: border-box; display: flex; flex-direction: column; gap: 5px; padding: 13px 17px; border: 1px solid #adccba66; border-radius: 9px; background: #15292efa; box-shadow: 0 12px 34px #030d1355; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 160ms, transform 160ms, visibility 160ms; }
+.desk-object-tooltip strong { color: #edf4ee; font-size: 13px; font-weight: 600; }
+.desk-object-tooltip > span { color: #b3c9bc; font-size: 11px; }
+.desk-object-link:is(:hover, :focus-visible) .desk-object-tooltip { opacity: 1; visibility: visible; transform: translate(calc(-50% + var(--tooltip-offset, 0px)), 0); }
+.pov-fallback .desk-object-links { bottom: 90px; top: auto; left: auto; right: 25px; display: flex; gap: 18px; }
+.pov-fallback .desk-object-link { position: relative; left: auto !important; top: auto !important; width: 44px !important; height: 44px !important; transform: none; visibility: visible !important; }
+.pov-fallback .desk-object-tooltip { left: auto; right: 0; transform: translateY(6px); }
+.pov-fallback .desk-object-link:is(:hover, :focus-visible) .desk-object-tooltip { transform: translateY(0); }
+@media (max-width: 700px) {
+  .pov-shell .desktop-header { padding: 16px; }
+  .pov-shell .desktop-home-layer::before { background: linear-gradient(180deg, #10191f99, transparent 20%, transparent 84%, #10191f66); }
+  .desk-look-controls { gap: 4px; }
+  .desk-look-controls button { width: 40px; height: 40px; min-width: 40px; }
+  .pov-fallback .desktop-home-copy { left: 4% !important; top: 27% !important; transform: none !important; width: 92% !important; height: auto !important; min-height: 185px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pov-shell :is(.desk-object-tooltip, .desk-object-dot, .desktop-primary, .desktop-primary svg, .desk-look-controls button) { transition: none; }
+}

@@ -74,6 +74,69 @@ function Assert-TcpPortAvailable {
     }
 }
 
+function Resolve-NodePath {
+    $nodeCommand = Get-Command node -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($nodeCommand -and (Test-Path -LiteralPath $nodeCommand.Source -PathType Leaf)) {
+        return [System.IO.Path]::GetFullPath($nodeCommand.Source)
+    }
+
+    # Some managed development environments expose pnpm through a wrapper while
+    # keeping the Node runtime outside PATH. Search only well-known locations and
+    # the pnpm wrapper's nearby runtime folders; do not recursively scan the disk.
+    $candidates = New-Object System.Collections.Generic.List[string]
+    if ($env:NODE_HOME) {
+        $candidates.Add((Join-Path $env:NODE_HOME 'node.exe'))
+    }
+    if ($env:ProgramFiles) {
+        $candidates.Add((Join-Path $env:ProgramFiles 'nodejs\node.exe'))
+    }
+    $programFilesX86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+    if ($programFilesX86) {
+        $candidates.Add((Join-Path $programFilesX86 'nodejs\node.exe'))
+    }
+    if ($env:LOCALAPPDATA) {
+        $candidates.Add((Join-Path $env:LOCALAPPDATA 'Programs\nodejs\node.exe'))
+    }
+
+    $pnpmCommand = Get-Command pnpm -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($pnpmCommand -and $pnpmCommand.Source) {
+        $searchRoot = Split-Path -Parent $pnpmCommand.Source
+        for ($level = 0; $level -lt 5 -and $searchRoot; $level++) {
+            $candidates.Add((Join-Path $searchRoot 'node.exe'))
+            $candidates.Add((Join-Path $searchRoot 'bin\node.exe'))
+            $candidates.Add((Join-Path $searchRoot 'node\bin\node.exe'))
+            $parent = Split-Path -Parent $searchRoot
+            if (-not $parent -or $parent -eq $searchRoot) {
+                break
+            }
+            $searchRoot = $parent
+        }
+    }
+
+    foreach ($candidate in $candidates | Select-Object -Unique) {
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            return [System.IO.Path]::GetFullPath($candidate)
+        }
+    }
+
+    throw 'Node.js 22 or newer was not found. Install Node.js, reopen PowerShell, or expose NODE_HOME before running dev.ps1.'
+}
+
+function Stop-LocalProcessTree {
+    param([System.Diagnostics.Process]$Process)
+    if ($Process.HasExited) {
+        return
+    }
+    if ($PSVersionTable.Platform -eq 'Win32NT') {
+        & taskkill.exe /PID $Process.Id /T /F 2>$null | Out-Null
+    }
+    else {
+        Stop-Process -Id $Process.Id -Force -ErrorAction SilentlyContinue
+    }
+}
+
 Import-LocalEnvironment
 Remove-ExpiredLocalLogs
 
@@ -108,18 +171,31 @@ try {
         '--app-dir', (Join-Path $repoRoot 'backend'),
         '--host', $hostName,
         '--port', $apiPort,
-        '--reload-dir', (Join-Path $repoRoot 'backend'),
+        '--reload-dir', (Join-Path $repoRoot 'backend\job_orchestrator'),
         '--reload'
     )
     $backend = Start-HiddenLoggedProcess $venvPython $backendArgs 'backend' $stamp
 
-    $node = Get-Command node -ErrorAction Stop | Select-Object -First 1
+    $nodePath = Resolve-NodePath
+    $nodeVersion = @(& $nodePath --version 2>&1)
+    if ($LASTEXITCODE -ne 0 -or -not ($nodeVersion[-1] -match '^v(?<major>\d+)\.')) {
+        throw "Unable to read the Node.js version from '$nodePath'."
+    }
+    if ([int]$Matches.major -lt 22) {
+        throw "Node.js 22 or newer is required; found '$($nodeVersion[-1])' at '$nodePath'."
+    }
     $viteEntry = Join-Path $repoRoot 'frontend\node_modules\vite\bin\vite.js'
     if (-not (Test-Path -LiteralPath $viteEntry -PathType Leaf)) {
         throw 'Vite is not installed. Run ./scripts/bootstrap.ps1 first.'
     }
-    $frontendArgs = @($viteEntry, '--host', '127.0.0.1', '--port', $uiPort)
-    $frontend = Start-HiddenLoggedProcess $node.Source $frontendArgs 'frontend' $stamp
+    $frontendRoot = Join-Path $repoRoot 'frontend'
+    $frontendArgs = @(
+        $viteEntry,
+        $frontendRoot,
+        '--host', '127.0.0.1',
+        '--port', $uiPort
+    )
+    $frontend = Start-HiddenLoggedProcess $nodePath $frontendArgs 'frontend' $stamp
 
     Write-Host ''
     Write-Host "API:      http://${hostName}:$apiPort" -ForegroundColor Cyan
@@ -137,9 +213,7 @@ try {
 }
 finally {
     foreach ($child in @($children)) {
-        if (-not $child.HasExited) {
-            Stop-Process -Id $child.Id -ErrorAction SilentlyContinue
-        }
+        Stop-LocalProcessTree $child
         $child.Dispose()
     }
 }
