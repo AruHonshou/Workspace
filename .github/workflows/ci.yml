@@ -76,7 +76,7 @@ jobs:
           }
       - shell: pwsh
         run: ./scripts/generate-sbom.ps1
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: output/sbom
