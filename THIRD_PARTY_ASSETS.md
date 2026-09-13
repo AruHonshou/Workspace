@@ -30,11 +30,6 @@ keyboard geometry, materials, and SVG artwork are newly authored; no code or
 assets from these references are incorporated, so no reference license is
 bundled as an asset license.
 
-The browser assets no longer include the user-supplied terrarium GLB, its old
-poster, the character brand image, or the soundtrack. Their previous license and
-authorization records do not apply to the replacement visuals. This change
-does not alter the rights in the owner's original copies.
-
 The internal browser UI bundles Latin-subset variable fonts Inter (body/UI,
 400–700) and Manrope (headings, 600–700), obtained from Google Fonts on
 2026-09-11. They are served locally from `frontend/public/fonts/`; the app does

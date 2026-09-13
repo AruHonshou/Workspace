@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Strict contracts for AmeWork's explicit, single-call AI operations."""
+"""Strict contracts for Workspace's explicit, single-call AI operations."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass

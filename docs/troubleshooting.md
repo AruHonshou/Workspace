@@ -1,31 +1,37 @@
-# Troubleshooting
+# Troubleshooting Workspace
 
 [Español](troubleshooting.es.md)
 
 ## Search does not start
 
-Confirm at least one résumé variant and choose a valid country and role. DeepSeek is not required for search. If a paid provider is not configured, fallback sources may still return a smaller set. Use the coverage check before spending credits.
+Choose a role, country, publication window and at least one source. Search does not require a CV or DeepSeek. Configure TheirStack for its selected portals; Brete/ANE is an independent source for Costa Rica.
 
-Provider status codes are shown safely: `401/403` means a rejected key, `402` insufficient plan/credits, and `429` a temporary quota. A paid page is not automatically retried; press retry/load only after resolving the cause.
+Provider errors can indicate a rejected key, missing balance, rate limits or an unavailable service. Check Settings before retrying. Refreshing a paid page can consume credits.
 
 ## No jobs appear
 
-Try a broader role, remove the city filter or allow worldwide remote. New results require an exact publication time within seven days and a valid HTTPS link. Coverage varies by country and provider; the UI does not claim complete Internet coverage.
+Try a broader role or a different publication window: 24 hours, 7 days or 30 days. Check the selected portals and provider warnings. Coverage varies by country and source.
 
 ## A portal is missing
 
-LinkedIn, Indeed, Glassdoor, Computrabajo, Naukri and similar boards are represented only through an authorized provider, official API/feed, or a user-supplied link. AmeWork does not scrape them directly or use logged-in browser sessions.
+The source selector reflects supported mappings. Actual listings depend on TheirStack coverage or the independent public source. Workspace does not log into restricted portals or use your browser sessions.
 
-## Model feature is unavailable
+## AI generation fails
 
-Search and deterministic fit summaries still work. For deep analysis, ATS résumé, interview guide or LinkedIn optimization, validate DeepSeek, grant the displayed purpose-specific consent and ensure a confirmed résumé exists in the job language.
+Check the DeepSeek key, model access and balance in Settings. Select the correct professional profile, confirm the required résumé variant and review the displayed consent. A network or provider error does not mean your local CV was deleted.
+
+## PDF import fails
+
+Try an unencrypted PDF with selectable text. Scanned documents require the optional OCR path and its system dependencies; a text PDF is preferable. Check the file error rather than repeatedly submitting a corrupt file.
 
 ## Credential vault fails
 
-Windows needs Credential Manager, macOS needs Keychain and Linux needs Secret Service/libsecret. Headless containers should inject `*_API_KEY` or mount a secret file and set `*_API_KEY_FILE`; runtime-injected secrets are read-only in the UI.
+The desktop runtime requires the platform's secure credential store. Headless containers can use DEEPSEEK_API_KEY / THEIRSTACK_API_KEY or mounted files configured through their corresponding _FILE variables. Runtime-injected keys are read-only in the UI.
 
-## Animation or WebGL fails
+## Local server or WebGL fails
 
-The app automatically switches to its static fallback. Update the graphics driver if desired; all forms remain usable without WebGL or animation.
+Keep the development terminal open. If a port is occupied, stop the previous instance before starting another. The interface is at http://127.0.0.1:5173/ and the backend health check is at http://127.0.0.1:8765/health.
 
-Run `./scripts/diagnose.ps1`, `./scripts/test.ps1` and `./scripts/scan-secrets.ps1` for local diagnostics.
+When WebGL is unavailable, the static desk fallback keeps the entry and application navigation available.
+
+Run ./scripts/diagnose.ps1 for read-only diagnostics and ./scripts/test.ps1 for synthetic tests. Remove personal data and keys from any logs shared in a bug report.

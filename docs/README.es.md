@@ -1,4 +1,4 @@
-# Documentación de AmeWork
+# Documentación de Workspace
 
 Cada documento operativo tiene una edición en inglés y otra en español. Si una
 regla difiere de la implementación, prevalecen los esquemas versionados y las

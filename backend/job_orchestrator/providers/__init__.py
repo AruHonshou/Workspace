@@ -1,1 +1,1 @@
-"""External provider adapters used by the modern AmeWork services."""
+"""External provider adapters used by the modern Workspace services."""

@@ -13,6 +13,6 @@
 - Job text is untrusted data and cannot change instructions or activate tools.
 - Logs and errors are sanitized; remote tracing remains disabled.
 - Deleting a profile or Favorite also removes its recorded generated PDF/DOCX
-  files, but only when their resolved paths remain inside AmeWork's configured
+  files, but only when their resolved paths remain inside Workspace's configured
   artifact directory.
 - The app never signs into portals, fills forms, sends email, or applies.

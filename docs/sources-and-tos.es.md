@@ -4,9 +4,9 @@
 
 TheirStack se consulta mediante su API oficial y una clave del usuario. Puede
 devolver anuncios cuya fuente sea LinkedIn, Indeed, Computrabajo, Glassdoor, un
-ATS o la empresa. AmeWork conserva la fuente separada del proveedor de datos y
+ATS o la empresa. Workspace conserva la fuente separada del proveedor de datos y
 abre la mejor URL original o canónica disponible.
-Cuando el usuario selecciona portales compatibles concretos, AmeWork envía el
+Cuando el usuario selecciona portales compatibles concretos, Workspace envía el
 filtro documentado de dominios URL a TheirStack antes de recibir filas cobrables.
 Una búsqueda exclusiva en Brete no llama a TheirStack.
 
@@ -15,7 +15,7 @@ públicos de empleo. Los proveedores comparten un contrato normalizado, fallan d
 forma independiente y usan caché. Una página cobrable nunca se reintenta ni se
 carga automáticamente.
 
-AmeWork no scrapea portales restringidos, no usa sesiones/cookies, no evita
+Workspace no scrapea portales restringidos, no usa sesiones/cookies, no evita
 CAPTCHA, no rellena formularios y no postula. Las respuestas externas son datos,
 no instrucciones. Cada adaptador debe aplicar timeout, tamaño limitado, HTTPS,
 atribución, fixtures deterministas y logs sin secretos. Antes de habilitar un

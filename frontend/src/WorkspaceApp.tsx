@@ -85,10 +85,10 @@ export default function WorkspaceApp() {
     try {
       const mapped = (await api.listProfiles()).map(mapProfile);
       setProfiles(mapped);
-      const preferred = localStorage.getItem("career-orchestrator-profile-id");
+      const preferred = localStorage.getItem("workspace-profile-id");
       const selected = mapped.find((item) => item.id === preferred) ?? mapped[0] ?? EMPTY_PROFILE;
       setProfile(selected);
-      if (selected.id) localStorage.setItem("career-orchestrator-profile-id", selected.id);
+      if (selected.id) localStorage.setItem("workspace-profile-id", selected.id);
       setProfileLoadError(null);
     } catch (error) {
       setProfileLoadError(error instanceof Error ? error.message : String(error));
@@ -130,10 +130,10 @@ export default function WorkspaceApp() {
     const mapped = mapProfile(value);
     setProfiles((current) => [mapped, ...current.filter((item) => item.id !== mapped.id)]);
     setProfile(mapped);
-    if (mapped.id) localStorage.setItem("career-orchestrator-profile-id", mapped.id);
+    if (mapped.id) localStorage.setItem("workspace-profile-id", mapped.id);
     return mapped;
   }
-  async function selectProfile(id: string) { const selected = profiles.find((item) => item.id === id); if (selected) { setProfile(selected); localStorage.setItem("career-orchestrator-profile-id", id); } }
+  async function selectProfile(id: string) { const selected = profiles.find((item) => item.id === id); if (selected) { setProfile(selected); localStorage.setItem("workspace-profile-id", id); } }
   async function createProfile(name: string) { storeProfile(await api.createProfile(name)); setNotice(locale === "es" ? "Perfil creado." : "Profile created."); }
   async function renameProfile(name: string) { if (profile.id) storeProfile(await api.updateProfile(profile.id, { display_name: name })); }
   async function duplicateProfile() { if (profile.id) storeProfile(await api.duplicateProfile(profile.id)); }
@@ -143,8 +143,8 @@ export default function WorkspaceApp() {
     const remaining = profiles.filter((item) => item.id !== profile.id);
     const next = remaining[0] ?? EMPTY_PROFILE;
     setProfiles(remaining); setProfile(next);
-    if (next.id) localStorage.setItem("career-orchestrator-profile-id", next.id);
-    else localStorage.removeItem("career-orchestrator-profile-id");
+    if (next.id) localStorage.setItem("workspace-profile-id", next.id);
+    else localStorage.removeItem("workspace-profile-id");
   }
   async function updatePreferences(preferences: CandidateProfile["preferences"]) {
     if (!profile.id) return;

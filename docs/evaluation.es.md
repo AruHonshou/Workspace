@@ -1,21 +1,22 @@
-# Evaluación
+# Validación de Workspace
 
 [English](evaluation.md)
 
-La aceptación exige pruebas unitarias de perfiles múltiples, selección del CV
-por idioma, filtro seguro, conectores, fechas de 24 h/7 d/30 d, deduplicación,
-ranking, credenciales, eventos, audio y PDF; integración con un servidor
-DeepSeek falso; y un E2E desde CV hasta guía de entrevista versionada.
+Ejecuta ./scripts/test.ps1 desde la raíz. Valida assets, ejecuta pruebas de backend y frontend, comprueba lint de Python y TypeScript y compila el frontend. La opción -Quick omite el lint de Python y los pasos de lint/build de producción del frontend.
 
-Los PDF sintéticos en español e inglés se extraen a texto y se renderizan página
-por página. Deben tener entre 8 y 20 páginas, capa de texto, enlace clicable,
-fuentes Unicode, ninguna página vacía y cero referencias a hechos no confirmados.
+La suite cubre:
 
-CI no utiliza una clave real. El smoke test real es optativo y se ejecuta sólo
-después de introducir la credencial desde la interfaz. Las pruebas comprueban que
-la clave, datos de contacto, prompts y razonamiento no aparecen en base de datos,
-logs, respuestas de API ni documentos.
+- Perfiles, confirmación, selección de idioma y evidencia profesional.
+- Proveedores, paginación, fechas, caché y deduplicación.
+- Favoritos, candidaturas e información profesional adicional.
+- Brechas, entrevistas, CV ATS y propuestas de LinkedIn.
+- Migraciones de base de datos y conservación de registros.
+- Credenciales, validación de entradas y contratos públicos.
+- Rutas, navegación, documentos y migración de preferencias.
+- Geometría del escritorio, proyección, interacción y recursos locales.
 
-Las pruebas de red usan fixtures para paginación, compresión, límites, `429`,
-timeouts y fuentes parciales. Ninguna prueba automatiza LinkedIn, Indeed,
-Glassdoor o Computrabajo.
+Utiliza perfiles, PDF y respuestas de proveedores sintéticos. Las pruebas no deben requerir claves reales, consumir créditos ni enviar datos profesionales a terceros.
+
+Los documentos deben tener texto legible, enlaces utilizables y afirmaciones respaldadas por evidencia. No se exige una cantidad de páginas única: un CV y una guía de entrevista tienen propósitos diferentes.
+
+Cuando cambie el renderizado, revisa PDF representativos y pantallas responsive además de las pruebas automáticas. La validación de assets, revisión de secretos y comprobación de contratos generados son verificaciones adicionales del repositorio.

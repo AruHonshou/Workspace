@@ -92,8 +92,12 @@ foreach ($assetId in $expectedAssets.Keys) {
 
 $publicDir = Join-Path $repoRoot 'frontend\public'
 foreach ($file in Get-ChildItem -LiteralPath $publicDir -File -Recurse) {
-    if ($file.Extension -match '^\.(glb|gltf|mp3|wav|ogg|m4a|flac)$' -or $file.Name -in @('ame.png', 'ame-terrarium-poster.svg')) {
-        Add-ValidationError "Retired model, character image or audio still ships: $($file.Name)"
+    if ($file.Extension -match '^\.(glb|gltf|mp3|wav|ogg|m4a|flac)$') {
+        Add-ValidationError "External model or audio is outside the asset policy: $($file.Name)"
+    }
+    $relative = $file.FullName.Substring($publicDir.Length + 1).Replace('\', '/')
+    if ($file.Extension -match '^\.(svg|png|jpe?g|webp|gif)$' -and $relative -notin @('branding/workspace-mark.svg', 'branding/desk-fallback.svg')) {
+        Add-ValidationError "Undocumented artwork ships in public: $relative"
     }
 }
 $html = Get-Content -LiteralPath (Join-Path $repoRoot 'frontend\index.html') -Raw -Encoding UTF8
@@ -111,4 +115,4 @@ if ($errors.Count -gt 0) {
     foreach ($validationError in $errors) { Write-Host "  - $validationError" -ForegroundColor Red }
     exit 1
 }
-Write-Host 'Asset validation passed: procedural scene, local SVGs, and no retired model or soundtrack.' -ForegroundColor Green
+Write-Host 'Asset validation passed: procedural scene and documented local SVGs.' -ForegroundColor Green

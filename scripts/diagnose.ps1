@@ -84,7 +84,7 @@ $validator = Join-Path $PSScriptRoot 'validate-assets.ps1'
 if (Test-Path -LiteralPath $validator -PathType Leaf) {
     $validationOutput = @(& $validator *>&1)
     if ($LASTEXITCODE -eq 0) {
-        Add-Result 'Asset manifest' 'ok' 'One byte-verified CC BY 4.0 Ame terrarium GLB and static fallback validated.'
+        Add-Result 'Asset manifest' 'ok' 'Procedural Workspace desk, local SVG artwork and static fallback validated.'
     }
     else {
         Add-Result 'Asset manifest' 'error' (($validationOutput | ForEach-Object { [string]$_ }) -join ' ')

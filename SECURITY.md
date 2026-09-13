@@ -1,23 +1,21 @@
-# Security policy
+# Workspace security policy
 
-## Supported version
+Workspace is a local, single-user application. Run the UI on loopback and do not expose the API directly to the public Internet.
 
-Only the latest tagged release is supported. This is a local, single-user
-application and is not designed to be exposed to a LAN or the public internet.
+## Boundaries
 
-## Safe defaults
+- Credentials use the operating-system vault or runtime secret injection.
+- Job search does not transmit a CV to the jobs provider.
+- AI operations transmit their required professional context after the review and consent offered by the application.
+- Documents and job descriptions are untrusted input.
+- Private files, keys, databases and runtime logs must not be committed.
+- File operations are restricted to the configured data and artifact locations.
+- Tests use synthetic data and simulated providers.
 
-- The API binds to `127.0.0.1`.
-- Cloud model fallback and remote tracing are disabled.
-- CVs, profile data, databases, logs, exports, and unverified 3D assets are
-  ignored by Git.
-- External job descriptions and portfolio pages are treated as untrusted data,
-  never as agent instructions.
-- The browser receives a sanitized event projection, not prompts, raw documents,
-  secrets, or hidden reasoning.
+The 3D desk and creator links are presentation features; they do not authenticate users or give external profiles access to local data.
 
 ## Reporting
 
-Do not open a public issue containing a real CV, job application, token, or log.
-Report vulnerabilities privately to the repository owner and include a minimal
-synthetic reproduction.
+Report vulnerabilities privately to the repository owner. Include a minimal synthetic reproduction and the affected version or commit. Do not include real CVs, credentials, candidate data or unredacted logs in public issues.
+
+See the [privacy documentation](docs/privacy-threat-model.md) for implementation details.

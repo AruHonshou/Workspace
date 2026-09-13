@@ -27,7 +27,7 @@ class JourneyJobProvider:
             {
                 "id": "journey-qa-1",
                 "job_title": "QA Automation Engineer",
-                "company": "AmeWork Test Company",
+                "company": "Workspace Test Company",
                 "description": (
                     "Required Playwright experience, REST API testing and "
                     "regression test design."

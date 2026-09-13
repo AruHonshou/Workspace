@@ -1,6 +1,6 @@
-# Arquitectura de AmeWork 2
+# Arquitectura de Workspace
 
-AmeWork es una aplicación local construida con React y FastAPI. SQLite almacena
+Workspace es una aplicación local construida con React y FastAPI. SQLite almacena
 perfiles, evidencias confirmadas, búsquedas, vacantes normalizadas, favoritos y
 documentos. El navegador usa REST; la aplicación no inicia sesión en portales ni
 envía postulaciones.
@@ -33,4 +33,4 @@ envía postulaciones.
 
 El contrato público está en `frontend/src/generated/openapi.json`. Los campos
 históricos de la base se conservan exclusivamente para migrar instalaciones sin
-perder datos; no forman parte de las rutas públicas de AmeWork 2.
+perder datos; no forman parte de las rutas públicas de Workspace.

@@ -1,23 +1,16 @@
-# Asset boundary / Límite de assets
+# Workspace visual assets
 
-The public repository contains one redistributable browser GLB, its license and
-provenance metadata, plus a code-authored static fallback. No private authoring
-source, voice, song, or undocumented model is included.
+The landing is an original procedural desk scene. Geometry and materials are authored in frontend/src/components; the browser does not download a third-party character model or soundtrack.
 
-El repositorio público contiene un GLB redistribuible para el navegador, sus
-metadatos de licencia y procedencia, y un fallback estático creado con código.
-No incluye fuentes privadas de edición, voces, canciones ni modelos sin
-documentar.
+## Shipped resources
 
-- `manifest.json` is the machine-readable publication gate.
-- `manifest.schema.json` documents its stable shape.
-- `../frontend/public/models/ame-terrarium-poster.svg` is the code-authored
-  fallback shown when WebGL is unavailable.
-- `source/`, `private/`, and `models/holomyth/` are intentionally excluded from
-  public version control.
-- `../frontend/public/models/ame-terrarium.glb` is the byte-verified CC BY 4.0
-  runtime asset documented by the manifest.
+- manifest.json: scene and supporting artwork metadata.
+- manifest.schema.json: the manifest structure.
+- frontend/public/branding/workspace-mark.svg: application mark and favicon.
+- frontend/public/branding/desk-fallback.svg: fallback when WebGL is unavailable.
+- frontend/public/branding/theme-init.js: initial presentation settings.
+- frontend/public/fonts: locally served Inter, Manrope and Caveat fonts with their OFL notices.
 
-Run `./scripts/validate-assets.ps1` before every commit. See
-[`docs/licensing.md`](../docs/licensing.md) or
-[`docs/licensing.es.md`](../docs/licensing.es.md).
+Run ./scripts/validate-assets.ps1 to check the scene and static artwork. Font and offline resource checks also run in frontend tests.
+
+The inventory and licensing notices are maintained in [THIRD_PARTY_ASSETS.md](../THIRD_PARTY_ASSETS.md). Keep that document and the manifest aligned with files actually shipped.

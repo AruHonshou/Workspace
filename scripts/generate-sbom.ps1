@@ -14,7 +14,7 @@ $pythonCandidates = @(
 )
 $venvPython = $pythonCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
 if (-not $OutputPath) {
-    $OutputPath = Join-Path $repoRoot 'output/sbom/amework-global.cdx.json'
+    $OutputPath = Join-Path $repoRoot 'output/sbom/workspace.cdx.json'
 }
 $resolvedOutput = [System.IO.Path]::GetFullPath($OutputPath)
 $outputDirectory = Split-Path -Parent $resolvedOutput
@@ -96,8 +96,8 @@ $bom = [ordered]@{
         timestamp = (Get-Date).ToUniversalTime().ToString('o')
         component = [ordered]@{
             type = 'application'
-            name = 'amework-global'
-            version = '0.1.0'
+            name = 'workspace'
+            version = '2.0.0'
         }
     }
     components = @($components | Sort-Object name, version)

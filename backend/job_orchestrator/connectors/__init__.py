@@ -1,1 +1,1 @@
-"""Provider-neutral search contracts for AmeWork."""
+"""Provider-neutral search contracts for Workspace."""

@@ -70,7 +70,7 @@ describe("Personal job assistant", () => {
     vi.spyOn(api, "listProfiles").mockResolvedValue([]);
     render(<App />);
     expect(await screen.findByRole("img", { name: /Vista en primera persona/ })).toHaveAttribute("src", "/branding/desk-fallback.svg");
-    expect(screen.queryByText(/AmeWork|Fan project/)).not.toBeInTheDocument();
+    expect(screen.getAllByText("Workspace").length).toBeGreaterThan(0);
     await userEvent.click(screen.getByRole("link", { name: "Explorar oportunidades" }));
     expect(screen.getByRole("heading", { level: 1, name: "Buscar empleos" })).toBeInTheDocument();
   });

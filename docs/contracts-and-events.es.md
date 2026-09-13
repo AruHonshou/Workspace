@@ -3,7 +3,7 @@
 El OpenAPI de ejecución y los modelos Pydantic son la autoridad. El contrato del
 navegador se genera con `scripts/generate-contracts.ps1`.
 
-La superficie pública de AmeWork 2 contiene salud/sesión, países y proveedores,
+La superficie pública de Workspace contiene salud/sesión, países y proveedores,
 configuración de DeepSeek y TheirStack, perfiles y hechos confirmados, búsquedas
 sin perfil, vacantes guardadas, herramientas del favorito, importación de
 LinkedIn, descargas y exportación/eliminación de datos locales.

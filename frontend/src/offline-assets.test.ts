@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -14,13 +14,14 @@ describe("offline asset boundary", () => {
     }
   });
 
-  it("does not ship the retired character assets or any soundtrack", () => {
+  it("ships only documented artwork and no external models or soundtrack", () => {
     const publicRoot = resolve(process.cwd(), "public");
     const files = readdirSync(publicRoot, { recursive: true }).map(String);
     expect(files.filter((file) => /\.(?:glb|gltf|mp3|wav|ogg|m4a|flac)$/i.test(file))).toEqual([]);
-    for (const path of ["models/ame-terrarium.glb", "models/ame-terrarium-poster.svg", "branding/ame.png", "audio/ukulele-song.mp3"]) {
-      expect(existsSync(resolve(publicRoot, path)), path).toBe(false);
-    }
+    expect(files.filter((file) => /\.(?:svg|png|jpe?g|webp|gif)$/i.test(file))
+      .map((file) => file.replaceAll("\\", "/")).sort()).toEqual([
+      "branding/desk-fallback.svg", "branding/workspace-mark.svg",
+    ]);
   });
 
   it("uses a local neutral SVG favicon and an offline scene fallback", () => {
@@ -35,16 +36,16 @@ describe("offline asset boundary", () => {
     }
     const html = readFileSync(resolve(process.cwd(), "index.html"), "utf8");
     expect(html).toContain('href="/branding/workspace-mark.svg"');
-    expect(html).not.toMatch(/amework|ame\.png/i);
+    expect(html).toContain("<title>Workspace · Espacio profesional</title>");
   });
 
-  it("does not request retired assets or start audio from runtime source", () => {
+  it("does not request external models or start audio from runtime source", () => {
     const sourceRoot = resolve(process.cwd(), "src");
     const files = readdirSync(sourceRoot, { recursive: true }).map(String)
       .filter((file) => /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file));
     for (const file of files) {
       const source = readFileSync(resolve(sourceRoot, file), "utf8");
-      expect(source, file).not.toMatch(/ame-terrarium|branding\/ame\.png|ukulele-song|<audio\b|new\s+Audio\s*\(/i);
+      expect(source, file).not.toMatch(/GLTFLoader|["']\/models\/|<audio\b|new\s+Audio\s*\(/i);
     }
   });
 });

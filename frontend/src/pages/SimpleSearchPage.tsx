@@ -17,7 +17,7 @@ export function SimpleSearchPage({ locale, countries, onSave }: {
 }) {
   const es = locale === "es";
   const [role, setRole] = useState("");
-  const [country, setCountry] = useState(localStorage.getItem("amework-search-country") || "CR");
+  const [country, setCountry] = useState(localStorage.getItem("workspace-search-country") || "CR");
   const [period, setPeriod] = useState("7");
   const [sources, setSources] = useState<Portal[]>([...defaultPortals, "brete"]);
   const [result, setResult] = useState<SimpleSearchResult | null>(null);
@@ -32,7 +32,7 @@ export function SimpleSearchPage({ locale, countries, onSave }: {
   }, [result]);
   useEffect(() => {
     let active = true;
-    const id = localStorage.getItem("amework-simple-search");
+    const id = localStorage.getItem("workspace-last-search-id");
     if (!id) { restoring.current = false; return; }
     void api.getSimpleSearch(id).then((value) => {
       if (active && restoring.current) {
@@ -52,7 +52,7 @@ export function SimpleSearchPage({ locale, countries, onSave }: {
     try {
       const value = await action();
       setResult(value);
-      localStorage.setItem("amework-simple-search", value.search_id);
+      localStorage.setItem("workspace-last-search-id", value.search_id);
       if (value.error) setError(value.error);
     } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
     finally { inFlight.current = false; setBusy(false); }
@@ -64,7 +64,7 @@ export function SimpleSearchPage({ locale, countries, onSave }: {
       <label className="simple-role">{es ? "¿Qué puesto buscas?" : "What job are you looking for?"}<input required minLength={2} maxLength={120} value={role} onChange={(event) => setRole(event.target.value)} placeholder="QA Engineer" /></label>
       <p className="role-expansion-note">⌁ {es ? "Workspace incluye equivalencias previsibles. Por ejemplo, QA también incluye QA Engineer, Quality Assurance, Tester y QA Automation." : "Workspace includes predictable role equivalents. For example, QA includes QA Engineer, Quality Assurance, Tester and QA Automation."}</p>
       <div className="simple-search-fields">
-        <CountryPicker countries={countries} locale={locale} value={country} onChange={(value) => { setCountry(value); setSources((current) => value === "CR" ? [...new Set<Portal>([...current, "brete"])] : current.filter((item) => item !== "brete")); localStorage.setItem("amework-search-country", value); }} />
+        <CountryPicker countries={countries} locale={locale} value={country} onChange={(value) => { setCountry(value); setSources((current) => value === "CR" ? [...new Set<Portal>([...current, "brete"])] : current.filter((item) => item !== "brete")); localStorage.setItem("workspace-search-country", value); }} />
         <FilterSelect icon="◷" label={es ? "Publicado" : "Published"} ariaLabel={es ? "Antigüedad" : "Publication window"} value={period} onChange={setPeriod} options={[
           { value: "1", glyph: "◷", label: es ? "Últimas 24 horas" : "Last 24 hours" }, { value: "7", glyph: "◷", label: es ? "Últimos 7 días" : "Last 7 days" }, { value: "30", glyph: "◷", label: es ? "Últimos 30 días" : "Last 30 days" },
         ]} />

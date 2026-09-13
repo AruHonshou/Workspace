@@ -54,7 +54,7 @@ function Get-Python312Path {
     throw 'Python 3.12 is required and must be discoverable through py, python, or the existing root .venv.'
 }
 
-Write-Host "AmeWork bootstrap: $repoRoot" -ForegroundColor Cyan
+Write-Host "Workspace bootstrap: $repoRoot" -ForegroundColor Cyan
 
 if (-not $SkipBackend) {
     $backendRoot = Join-Path $repoRoot 'backend'

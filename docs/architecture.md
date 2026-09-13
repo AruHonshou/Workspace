@@ -1,6 +1,6 @@
-# AmeWork 2 architecture
+# Workspace architecture
 
-AmeWork is a local-first React and FastAPI application. SQLite stores profiles,
+Workspace is a local-first React and FastAPI application. SQLite stores profiles,
 confirmed evidence, searches, normalized jobs, favorites and generated documents.
 The browser uses REST for commands and reads; no automation logs into a job portal
 or submits an application.
@@ -33,4 +33,4 @@ or submits an application.
 
 The public API is generated in `frontend/src/generated/openapi.json`. Historical
 database fields are retained solely so existing installations can migrate without
-losing data; they are not public AmeWork 2 routes.
+losing data; they are not public Workspace routes.

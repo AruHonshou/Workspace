@@ -200,7 +200,7 @@ class BreteProvider:
                 base_url=self.base_url,
                 timeout=20,
                 follow_redirects=False,
-                headers={"User-Agent": "AmeWork/2.0 (+local personal job search)"},
+                headers={"User-Agent": "Workspace/2.0 (+local personal job search)"},
             ) as client:
                 occupation = await self._occupation(client, query.role)
                 if not occupation:

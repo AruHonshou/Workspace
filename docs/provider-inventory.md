@@ -7,6 +7,6 @@
 | DeepSeek | Explicit gap, interview, ATS résumé and LinkedIn operations | User-owned key | Redacted confirmed facts and the relevant job/profile text |
 
 LinkedIn, Indeed, Computrabajo and Glassdoor are displayed as job sources when
-TheirStack returns them. AmeWork does not scrape them, reuse their sessions or
+TheirStack returns them. Workspace does not scrape them, reuse their sessions or
 submit forms. Every release must preserve source attribution, canonical links,
 credit transparency and independent provider failure handling.

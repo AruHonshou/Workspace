@@ -9,7 +9,7 @@ const result: SimpleSearchResult = { search_id: "search_test", status: "complete
 
 describe("Independent job search", () => {
   it("restores an interrupted search error without resubmitting it", async () => {
-    localStorage.setItem("amework-simple-search", result.search_id);
+    localStorage.setItem("workspace-last-search-id", result.search_id);
     vi.spyOn(api, "getSimpleSearch").mockResolvedValue({ ...result, status: "failed", error: "Página interrumpida; no se reintentó." });
     const search = vi.spyOn(api, "simpleSearch");
     render(<MemoryRouter><SimpleSearchPage locale="es" countries={[]} onSave={vi.fn()} /></MemoryRouter>);

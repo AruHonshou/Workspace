@@ -14,5 +14,5 @@
 - Logs y errores se sanitizan; el tracing remoto permanece desactivado.
 - Al borrar un perfil o Favorito también se eliminan sus PDF/DOCX generados
   registrados, pero únicamente cuando la ruta resuelta permanece dentro del
-  directorio de artefactos configurado por AmeWork.
+  directorio de artefactos configurado por Workspace.
 - La aplicación nunca inicia sesión en portales, rellena formularios, envía correos ni postula.

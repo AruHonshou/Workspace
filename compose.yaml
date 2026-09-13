@@ -32,4 +32,5 @@ services:
       - "127.0.0.1:5173:80"
 
 volumes:
+  # Persistent storage identifier retained so existing installations keep their data.
   amework-data:

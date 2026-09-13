@@ -438,8 +438,8 @@ def register_unicode_document_fonts() -> tuple[str, str]:
     """Register a Unicode family when the host provides one, with a safe fallback."""
 
     registered_fonts = set(pdfmetrics.getRegisteredFontNames())
-    if {"AmeWorkUI", "AmeWorkUI-Bold"} <= registered_fonts:
-        return "AmeWorkUI", "AmeWorkUI-Bold"
+    if {"WorkspaceUI", "WorkspaceUI-Bold"} <= registered_fonts:
+        return "WorkspaceUI", "WorkspaceUI-Bold"
     windows_root = Path(os.environ.get("WINDIR", "C:/Windows"))
     candidates = [
         (
@@ -463,16 +463,16 @@ def register_unicode_document_fonts() -> tuple[str, str]:
         if not regular_path.is_file() or not bold_path.is_file():
             continue
         try:
-            pdfmetrics.registerFont(TTFont("AmeWorkUI", str(regular_path)))
-            pdfmetrics.registerFont(TTFont("AmeWorkUI-Bold", str(bold_path)))
+            pdfmetrics.registerFont(TTFont("WorkspaceUI", str(regular_path)))
+            pdfmetrics.registerFont(TTFont("WorkspaceUI-Bold", str(bold_path)))
             pdfmetrics.registerFontFamily(
-                "AmeWorkUI",
-                normal="AmeWorkUI",
-                bold="AmeWorkUI-Bold",
-                italic="AmeWorkUI",
-                boldItalic="AmeWorkUI-Bold",
+                "WorkspaceUI",
+                normal="WorkspaceUI",
+                bold="WorkspaceUI-Bold",
+                italic="WorkspaceUI",
+                boldItalic="WorkspaceUI-Bold",
             )
-            return "AmeWorkUI", "AmeWorkUI-Bold"
+            return "WorkspaceUI", "WorkspaceUI-Bold"
         except (
             OSError,
             TTFError,

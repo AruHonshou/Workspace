@@ -1,31 +1,37 @@
-# Solución de problemas
+# Solución de problemas de Workspace
 
 [English](troubleshooting.md)
 
 ## La búsqueda no inicia
 
-Confirma al menos un CV y elige país y rol válidos. DeepSeek no es necesario para buscar. Si no hay proveedor de pago configurado, las fuentes de respaldo pueden devolver menos resultados. Comprueba cobertura antes de gastar créditos.
+Elige puesto, país, antigüedad y al menos una fuente. Buscar no requiere CV ni DeepSeek. Configura TheirStack para consultar sus portales; Brete/ANE es una fuente independiente para Costa Rica.
 
-Los códigos se muestran sin filtrar secretos: `401/403` es clave rechazada, `402` plan/créditos insuficientes y `429` cuota temporal. Una página cobrable no se reintenta sola; vuelve a solicitarla sólo después de resolver la causa.
+Un error del proveedor puede indicar clave rechazada, falta de saldo, límite temporal o indisponibilidad. Revisa Configuración antes de reintentar. Actualizar una página de pago puede consumir créditos.
 
 ## No aparecen vacantes
 
-Prueba un rol amplio, quita la ciudad o habilita remoto mundial. Los resultados nuevos exigen hora exacta dentro de siete días y enlace HTTPS válido. La cobertura varía por país/proveedor y la interfaz nunca afirma cubrir todo Internet.
+Prueba un puesto más amplio u otra antigüedad: 24 horas, 7 días o 30 días. Revisa los portales seleccionados y las advertencias de cada fuente. La cobertura depende del país y del proveedor.
 
 ## Falta un portal
 
-LinkedIn, Indeed, Glassdoor, Computrabajo, Naukri y similares sólo aparecen mediante proveedor autorizado, API/feed oficial o enlace aportado por el usuario. AmeWork no los scrapea directamente ni usa sesiones iniciadas.
+El selector refleja las fuentes compatibles. Los resultados reales dependen de la cobertura de TheirStack o del conector público correspondiente. Workspace no inicia sesión en portales restringidos ni utiliza tus sesiones del navegador.
 
-## Una función de IA no está disponible
+## Falla una generación de IA
 
-La búsqueda y los resúmenes deterministas siguen funcionando. Para análisis profundo, CV ATS, guía o LinkedIn, valida DeepSeek, concede el consentimiento mostrado y confirma un CV en el idioma de la oferta.
+Comprueba la clave de DeepSeek, acceso al modelo y saldo. Selecciona el perfil profesional correcto, confirma el CV requerido y revisa el consentimiento mostrado. Un error de red o del proveedor no significa que se haya borrado tu CV local.
+
+## No se puede importar el PDF
+
+Prueba un PDF sin contraseña y con texto seleccionable. Los documentos escaneados requieren la vía opcional de OCR y sus dependencias del sistema; es preferible un PDF con texto. Revisa el error antes de volver a subir un archivo corrupto.
 
 ## Falla el almacén de credenciales
 
-Windows usa Credential Manager, macOS Keychain y Linux Secret Service/libsecret. En contenedores sin escritorio, inyecta `*_API_KEY` o monta un archivo y configura `*_API_KEY_FILE`; los secretos inyectados son de sólo lectura en la UI.
+La ejecución local utiliza el almacén seguro del sistema operativo. Los contenedores sin escritorio pueden recibir DEEPSEEK_API_KEY / THEIRSTACK_API_KEY o archivos montados mediante las variables _FILE correspondientes. Las claves inyectadas son de solo lectura en la interfaz.
 
-## Falla WebGL
+## No abre el servidor o falla WebGL
 
-La aplicación cambia automáticamente a su imagen estática. Todos los formularios siguen funcionando sin WebGL ni animación.
+Mantén abierta la terminal de desarrollo. Si un puerto está ocupado, detén la instancia anterior antes de iniciar otra. La interfaz abre en http://127.0.0.1:5173/ y el estado del backend se consulta en http://127.0.0.1:8765/health.
 
-Ejecuta `./scripts/diagnose.ps1`, `./scripts/test.ps1` y `./scripts/scan-secrets.ps1` para diagnóstico local.
+Si WebGL no está disponible, la imagen del escritorio de respaldo conserva el acceso y la navegación.
+
+Ejecuta ./scripts/diagnose.ps1 para diagnóstico de solo lectura y ./scripts/test.ps1 para pruebas sintéticas. Elimina claves y datos personales de cualquier log que compartas al informar de un error.

@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-v4-pro"
     deepseek_reasoning_effort: str = "high"
     deepseek_max_concurrency: int = Field(default=1, ge=1, le=4)
+    # Persistent vault namespace: retain access to keys saved by existing installs.
+    # This is a storage identifier, not a user-facing product name.
     credential_service: str = "Career Orchestrator"
     credential_account: str = "deepseek-api-key"
     theirstack_credential_account: str = "theirstack-api-key"
@@ -45,7 +47,7 @@ class Settings(BaseSettings):
     @classmethod
     def bind_loopback_only(cls, value: str) -> str:
         if value.casefold() not in {"127.0.0.1", "localhost", "::1"}:
-            raise ValueError("Career Orchestrator may only bind to a loopback address")
+            raise ValueError("Workspace may only bind to a loopback address")
         return value
 
     @property

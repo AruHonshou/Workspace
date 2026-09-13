@@ -3,7 +3,7 @@
 The runtime OpenAPI document and Pydantic models are authoritative. Generate the
 browser contract with `scripts/generate-contracts.ps1`.
 
-The AmeWork 2 public surface contains health/session metadata, countries and
+The Workspace public surface contains health/session metadata, countries and
 providers, DeepSeek and TheirStack settings, profiles and confirmed facts,
 profile-free searches, saved jobs, guide/ATS tools, LinkedIn imports, document
 downloads and local data export/deletion.

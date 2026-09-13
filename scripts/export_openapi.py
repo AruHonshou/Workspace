@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Export AmeWork's canonical OpenAPI JSON")
+    parser = argparse.ArgumentParser(description="Export Workspace's canonical OpenAPI JSON")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 

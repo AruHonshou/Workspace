@@ -3,58 +3,6 @@ revision = 3
 requires-python = ">=3.12"
 
 [[package]]
-name = "amework-backend"
-version = "2.0.0"
-source = { editable = "." }
-dependencies = [
-    { name = "fastapi" },
-    { name = "httpx" },
-    { name = "keyring" },
-    { name = "pycountry" },
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "pypdf" },
-    { name = "python-docx" },
-    { name = "python-multipart" },
-    { name = "reportlab" },
-    { name = "uvicorn", extra = ["standard"] },
-]
-
-[package.optional-dependencies]
-ocr = [
-    { name = "pillow" },
-    { name = "pymupdf" },
-    { name = "pytesseract" },
-]
-test = [
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "fastapi", specifier = ">=0.115,<1" },
-    { name = "httpx", specifier = ">=0.27,<1" },
-    { name = "keyring", specifier = ">=25.6,<27" },
-    { name = "pillow", marker = "extra == 'ocr'", specifier = ">=11,<13" },
-    { name = "pycountry", specifier = ">=24.6,<25" },
-    { name = "pydantic", specifier = ">=2.10,<3" },
-    { name = "pydantic-settings", specifier = ">=2.7,<3" },
-    { name = "pymupdf", marker = "extra == 'ocr'", specifier = ">=1.25,<2" },
-    { name = "pypdf", specifier = ">=5,<7" },
-    { name = "pytesseract", marker = "extra == 'ocr'", specifier = ">=0.3.13,<1" },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3,<10" },
-    { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.25,<2" },
-    { name = "python-docx", specifier = ">=1.1,<2" },
-    { name = "python-multipart", specifier = ">=0.0.20,<1" },
-    { name = "reportlab", specifier = ">=4.2,<5" },
-    { name = "ruff", marker = "extra == 'test'", specifier = ">=0.12,<1" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.34,<1" },
-]
-provides-extras = ["ocr", "test"]
-
-[[package]]
 name = "annotated-doc"
 version = "0.0.5"
 source = { registry = "https://pypi.org/simple" }
@@ -1261,3 +1209,55 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/1b/6c/c65773d6cab416a64d191d6ee8a8b1c68a09970ea6909d16965d26bfed1e/websockets-15.0.1-cp313-cp313-win_amd64.whl", hash = "sha256:e09473f095a819042ecb2ab9465aee615bd9c2028e4ef7d933600a8401c79561", size = 176837, upload-time = "2025-03-05T20:02:55.237Z" },
     { url = "https://files.pythonhosted.org/packages/fa/a8/5b41e0da817d64113292ab1f8247140aac61cbf6cfd085d6a0fa77f4984f/websockets-15.0.1-py3-none-any.whl", hash = "sha256:f7a866fbc1e97b5c617ee4116daaa09b722101d4a3c170c787450ba409f9736f", size = 169743, upload-time = "2025-03-05T20:03:39.41Z" },
 ]
+
+[[package]]
+name = "workspace-backend"
+version = "2.0.0"
+source = { editable = "." }
+dependencies = [
+    { name = "fastapi" },
+    { name = "httpx" },
+    { name = "keyring" },
+    { name = "pycountry" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "pypdf" },
+    { name = "python-docx" },
+    { name = "python-multipart" },
+    { name = "reportlab" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.optional-dependencies]
+ocr = [
+    { name = "pillow" },
+    { name = "pymupdf" },
+    { name = "pytesseract" },
+]
+test = [
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.115,<1" },
+    { name = "httpx", specifier = ">=0.27,<1" },
+    { name = "keyring", specifier = ">=25.6,<27" },
+    { name = "pillow", marker = "extra == 'ocr'", specifier = ">=11,<13" },
+    { name = "pycountry", specifier = ">=24.6,<25" },
+    { name = "pydantic", specifier = ">=2.10,<3" },
+    { name = "pydantic-settings", specifier = ">=2.7,<3" },
+    { name = "pymupdf", marker = "extra == 'ocr'", specifier = ">=1.25,<2" },
+    { name = "pypdf", specifier = ">=5,<7" },
+    { name = "pytesseract", marker = "extra == 'ocr'", specifier = ">=0.3.13,<1" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3,<10" },
+    { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.25,<2" },
+    { name = "python-docx", specifier = ">=1.1,<2" },
+    { name = "python-multipart", specifier = ">=0.0.20,<1" },
+    { name = "reportlab", specifier = ">=4.2,<5" },
+    { name = "ruff", marker = "extra == 'test'", specifier = ">=0.12,<1" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.34,<1" },
+]
+provides-extras = ["ocr", "test"]

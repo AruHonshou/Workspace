@@ -7,6 +7,6 @@
 | DeepSeek | Operaciones explícitas de brechas, entrevista, CV ATS y LinkedIn | Clave del usuario | Hechos confirmados sin contactos y texto pertinente de vacante/perfil |
 
 LinkedIn, Indeed, Computrabajo y Glassdoor se muestran como fuentes cuando
-TheirStack los devuelve. AmeWork no los scrapea, no usa sus sesiones y no envía
+TheirStack los devuelve. Workspace no los scrapea, no usa sus sesiones y no envía
 formularios. Cada versión debe mantener atribución, enlaces canónicos, claridad
 sobre créditos y fallos independientes por proveedor.
