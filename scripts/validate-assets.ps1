@@ -5,16 +5,18 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-if (-not $ManifestPath) { $ManifestPath = Join-Path $repoRoot 'assets\manifest.json' }
+if (-not $ManifestPath) { $ManifestPath = Join-Path $repoRoot 'assets/manifest.json' }
 $ManifestPath = [System.IO.Path]::GetFullPath($ManifestPath)
 $errors = [System.Collections.Generic.List[string]]::new()
-$repoPrefix = $repoRoot.TrimEnd('\') + '\'
+$directorySeparator = [System.IO.Path]::DirectorySeparatorChar
+$repoPrefix = $repoRoot.TrimEnd([char[]]@('/', '\')) + $directorySeparator
 
 function Add-ValidationError { param([string]$Message) $script:errors.Add($Message) }
 
 function Resolve-AssetFile {
     param([string]$RelativePath)
-    $resolved = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $RelativePath.Replace('/', '\')))
+    $normalizedPath = $RelativePath.Replace('\', $directorySeparator).Replace('/', $directorySeparator)
+    $resolved = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $normalizedPath))
     if (-not $resolved.StartsWith($repoPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
         Add-ValidationError "Asset path escapes the repository: $RelativePath"
         return $null
@@ -90,7 +92,7 @@ foreach ($assetId in $expectedAssets.Keys) {
     if (-not $seen.ContainsKey($assetId)) { Add-ValidationError "Required asset is absent: $assetId" }
 }
 
-$publicDir = Join-Path $repoRoot 'frontend\public'
+$publicDir = Join-Path $repoRoot 'frontend/public'
 foreach ($file in Get-ChildItem -LiteralPath $publicDir -File -Recurse) {
     if ($file.Extension -match '^\.(glb|gltf|mp3|wav|ogg|m4a|flac)$') {
         Add-ValidationError "External model or audio is outside the asset policy: $($file.Name)"
@@ -100,7 +102,7 @@ foreach ($file in Get-ChildItem -LiteralPath $publicDir -File -Recurse) {
         Add-ValidationError "Undocumented artwork ships in public: $relative"
     }
 }
-$html = Get-Content -LiteralPath (Join-Path $repoRoot 'frontend\index.html') -Raw -Encoding UTF8
+$html = Get-Content -LiteralPath (Join-Path $repoRoot 'frontend/index.html') -Raw -Encoding UTF8
 if ($html -notmatch 'href="/branding/workspace-mark.svg"') { Add-ValidationError 'The browser icon must use the local workspace SVG.' }
 if ($html -match '(?:src|href)\s*=\s*["'']https?://') { Add-ValidationError 'The HTML must not load remote resources.' }
 $schemaPath = Join-Path (Split-Path -Parent $ManifestPath) 'manifest.schema.json'
