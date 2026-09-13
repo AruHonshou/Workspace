@@ -103,7 +103,7 @@ foreach ($file in Get-ChildItem -LiteralPath $publicDir -File -Recurse) {
     }
 }
 $html = Get-Content -LiteralPath (Join-Path $repoRoot 'frontend/index.html') -Raw -Encoding UTF8
-if ($html -notmatch 'href="/branding/workspace-mark.svg"') { Add-ValidationError 'The browser icon must use the local workspace SVG.' }
+if ($html -notmatch 'href="(?:/|%BASE_URL%)branding/workspace-mark.svg"') { Add-ValidationError 'The browser icon must use the local workspace SVG.' }
 if ($html -match '(?:src|href)\s*=\s*["'']https?://') { Add-ValidationError 'The HTML must not load remote resources.' }
 $schemaPath = Join-Path (Split-Path -Parent $ManifestPath) 'manifest.schema.json'
 if (-not (Test-Path -LiteralPath $schemaPath -PathType Leaf)) { Add-ValidationError 'Manifest schema is missing.' }
