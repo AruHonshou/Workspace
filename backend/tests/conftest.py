@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+
 from job_orchestrator.ai_contracts import (
     AIInvocationResult,
     AIOperation,

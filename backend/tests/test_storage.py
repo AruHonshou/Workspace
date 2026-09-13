@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+
 from job_orchestrator.ranking import normalize_manual_job
 from job_orchestrator.schemas import (
     ManualJobCreate,

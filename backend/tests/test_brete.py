@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 import pytest
+
 from job_orchestrator.connectors.providers import ProviderSearchQuery
 from job_orchestrator.providers.jobs.brete import BreteProvider
 

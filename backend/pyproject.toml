@@ -34,3 +34,6 @@ packages = ["job_orchestrator"]
 [tool.pytest.ini_options]
 addopts = "-q"
 testpaths = ["tests"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["job_orchestrator"]

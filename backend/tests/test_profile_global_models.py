@@ -5,6 +5,8 @@ import sqlite3
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
+
 from job_orchestrator.schemas import (
     CloudProcessingConsent,
     ConfirmationStatus,
@@ -18,7 +20,6 @@ from job_orchestrator.schemas import (
     utc_now,
 )
 from job_orchestrator.storage import SQLiteStore
-from pydantic import ValidationError
 
 
 def _confirmed_variant(language: str = "es") -> ResumeVariant:
