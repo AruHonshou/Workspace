@@ -4,8 +4,6 @@ import time
 from io import BytesIO
 
 from fastapi.testclient import TestClient
-from reportlab.pdfgen.canvas import Canvas
-
 from job_orchestrator.ai_contracts import (
     AIInvocationResult,
     AIOperation,
@@ -39,6 +37,7 @@ from job_orchestrator.services.ai_operations import (
     build_linkedin_optimization_operation,
     run_fit_analysis,
 )
+from reportlab.pdfgen.canvas import Canvas
 
 
 def _complete_linkedin_sections(fact_id: str) -> list[LinkedInSectionProposal]:
@@ -264,6 +263,51 @@ def test_ats_skills_must_exist_in_their_cited_evidence() -> None:
     assert any("skill" in issue.casefold() for issue in issues)
 
 
+def test_ats_quality_warning_keeps_safe_draft_available_for_review() -> None:
+    profile = _profile()
+    job = _job()
+
+    class ConservativeRegistry:
+        def invoke(self, operation: AIOperation, payload: dict):
+            assert operation == AIOperation.ATS_RESUME
+            fact = payload["confirmed_records"][0]
+            proposal = ATSResumeProposal(
+                language="en",
+                headline="QA Engineer",
+                professional_summary="QA professional with confirmed testing experience.",
+                summary_record_ids=[fact["fact_id"]],
+                skills=[
+                    ATSResumeSkillProposal(
+                        text="Playwright", record_ids=[fact["fact_id"]]
+                    )
+                ],
+                experience=[
+                    ATSResumeLineProposal(
+                        original_text=fact["text"],
+                        proposed_text=fact["text"],
+                        record_ids=[fact["fact_id"]],
+                    )
+                ],
+            )
+            return AIInvocationResult(
+                content=proposal.model_dump_json(),
+                model="fixture",
+                structured=proposal,
+            )
+
+    result = build_ats_resume_operation(ConservativeRegistry()).invoke(
+        {
+            "job": job.model_dump(mode="json"),
+            "profile": profile.model_dump(mode="json"),
+            "stage": "queued",
+        }
+    )
+
+    assert result["stage"] == "awaiting_approval"
+    assert result["document"]["experience"]
+    assert any("copied" in issue.casefold() for issue in result["review_issues"])
+
+
 def test_linkedin_generation_receives_the_complete_redacted_context() -> None:
     profile = _profile()
     profile.summary = "QA engineer with Playwright experience. ada@example.com"
@@ -463,6 +507,59 @@ def test_ats_resume_api_requires_approval_then_exports_pdf_and_docx(client) -> N
     assert pdf.status_code == docx.status_code == 200
     assert pdf.content.startswith(b"%PDF")
     assert docx.content.startswith(b"PK")
+
+
+def test_ats_resume_versions_are_independent_for_each_profile(client) -> None:
+    profile_ids: list[str] = []
+    for index in range(2):
+        imported = client.post(
+            "/api/profiles/import",
+            params={"language": "en"},
+            files={
+                "file": (
+                    f"resume-{index}.txt",
+                    b"Built Playwright regression tests for Acme in 2025.",
+                    "text/plain",
+                )
+            },
+        )
+        imported.raise_for_status()
+        profile_id = imported.json()["profile"]["profile_id"]
+        client.post(f"/api/profiles/{profile_id}/confirm").raise_for_status()
+        client.post(
+            f"/api/profiles/{profile_id}/cloud-consent",
+            json={"granted": True, "purposes": ["document_generation"]},
+        ).raise_for_status()
+        profile_ids.append(profile_id)
+
+    client.app.state.ai_client = DocumentRegistry()
+    job = client.app.state.store.save_job(_job())
+    run = client.app.state.store.save_search(
+        SearchRecord(
+            status=SearchStatus.COMPLETED,
+            request={"flow": "simple_search"},
+            result={"jobs": [{"job_id": job.job_id}]},
+        )
+    )
+    saved = client.post(
+        "/api/saved-jobs",
+        json={"job_id": job.job_id, "search_id": run.search_id},
+    )
+    saved.raise_for_status()
+    saved_id = saved.json()["saved_id"]
+
+    versions = []
+    for index, profile_id in enumerate(profile_ids):
+        response = client.post(
+            f"/api/saved-jobs/{saved_id}/ats-resumes",
+            params={"profile_id": profile_id},
+            headers={"Idempotency-Key": f"ats-profile-{index}"},
+        )
+        assert response.status_code == 202, response.text
+        versions.append(response.json())
+
+    assert versions[0]["resume_id"] != versions[1]["resume_id"]
+    assert versions[0]["version"] == versions[1]["version"] == 1
 
 
 def test_saved_job_interview_guide_completes_and_downloads_from_modern_api(

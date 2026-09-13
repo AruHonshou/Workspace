@@ -1,7 +1,6 @@
 import json
 
 import pytest
-
 from job_orchestrator.schemas import JobRecord, Profile, SourceKind, utc_now
 from job_orchestrator.storage import SCHEMA, ActiveOperationsError, SQLiteStore
 

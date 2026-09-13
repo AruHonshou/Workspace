@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-
 from job_orchestrator.countries import (
     country_catalog,
     country_name,

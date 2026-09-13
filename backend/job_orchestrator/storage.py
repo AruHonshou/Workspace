@@ -1120,6 +1120,59 @@ class SQLiteStore:
                     (utc_now().isoformat(),),
                 )
 
+            if (
+                connection.execute(
+                    "SELECT 1 FROM schema_migrations WHERE version=14"
+                ).fetchone()
+                is None
+            ):
+                # Early modern databases retained the legacy uniqueness rule on
+                # (saved_id, version). That makes version 1 for a second profile
+                # collide with version 1 created for the first profile. A résumé
+                # has its own stable resume_id, so version numbers must be scoped
+                # to that résumé instead of to the saved vacancy.
+                connection.commit()
+                connection.execute("PRAGMA foreign_keys = OFF")
+                try:
+                    connection.executescript(
+                        """
+                        BEGIN IMMEDIATE;
+                        CREATE TABLE ats_resume_versions_v14 (
+                            version_id TEXT PRIMARY KEY,
+                            resume_id TEXT NOT NULL,
+                            saved_id TEXT NOT NULL REFERENCES saved_jobs(saved_id) ON DELETE CASCADE,
+                            version INTEGER NOT NULL,
+                            status TEXT NOT NULL,
+                            data_json TEXT NOT NULL,
+                            created_at TEXT NOT NULL,
+                            updated_at TEXT NOT NULL,
+                            UNIQUE(resume_id, version)
+                        );
+                        INSERT INTO ats_resume_versions_v14(
+                            version_id, resume_id, saved_id, version, status,
+                            data_json, created_at, updated_at
+                        )
+                        SELECT version_id, resume_id, saved_id, version, status,
+                               data_json, created_at, updated_at
+                        FROM ats_resume_versions;
+                        DROP TABLE ats_resume_versions;
+                        ALTER TABLE ats_resume_versions_v14 RENAME TO ats_resume_versions;
+                        CREATE INDEX idx_ats_resume_versions_saved
+                        ON ats_resume_versions(saved_id, created_at DESC);
+                        COMMIT;
+                        """
+                    )
+                    connection.execute(
+                        "INSERT INTO schema_migrations(version, applied_at) VALUES(14, ?)",
+                        (utc_now().isoformat(),),
+                    )
+                    connection.commit()
+                except Exception:
+                    connection.rollback()
+                    raise
+                finally:
+                    connection.execute("PRAGMA foreign_keys = ON")
+
     @staticmethod
     def _display_name_owner(
         connection: sqlite3.Connection,

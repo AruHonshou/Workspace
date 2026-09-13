@@ -2,6 +2,8 @@
 
 Tu espacio personal para buscar empleo, preparar candidaturas y mejorar tu perfil profesional.
 
+**Versión estable actual: 1.0.0.** Consulta el [historial de versiones](CHANGELOG.md) para conocer el alcance y las limitaciones del lanzamiento.
+
 Workspace es una aplicación gratuita y de código abierto que ejecutas en tu equipo. Reúne búsqueda de vacantes, perfiles de CV, favoritos, seguimiento de candidaturas y herramientas de inteligencia artificial en una interfaz con pestañas. La entrada es un escritorio 3D interactivo.
 
 **Tú controlas tus datos y utilizas tus propias API keys.** Workspace no cobra por utilizar la aplicación. TheirStack y DeepSeek pueden cobrar por el uso de sus servicios según la cuenta y el plan de cada usuario.

@@ -380,7 +380,12 @@ def build_ats_resume_operation(ai_client: StructuredAIClient) -> SequentialOpera
                 document, issues = revised_document, revised_issues
         remaining_quality_issues = ats_adaptation_issues(document, job)
         if remaining_quality_issues:
-            raise RuntimeError("DeepSeek did not produce a sufficiently tailored ATS résumé")
+            # These are presentation-quality findings, not evidence-safety failures.
+            # The deterministic builder above has already rejected unsupported record
+            # identifiers, restored protected facts, and omitted unverified skills.
+            # Keep a truthful structured draft available for human review instead of
+            # turning a conservative (or already well-targeted) rewrite into a 503.
+            issues.extend(remaining_quality_issues)
         if not document.experience and not document.projects:
             issues.append(
                 "The ATS résumé has no confirmed experience or project evidence."

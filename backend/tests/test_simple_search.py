@@ -3,7 +3,6 @@ from datetime import timedelta
 from uuid import uuid4
 
 import pytest
-
 from job_orchestrator.connectors.providers import ProviderSearchPage
 from job_orchestrator.schemas import SearchStatus, utc_now
 from job_orchestrator.services.job_identity import merge_jobs

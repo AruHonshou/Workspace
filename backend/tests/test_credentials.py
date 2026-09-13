@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-
 from job_orchestrator.credentials import CredentialStore, CredentialStoreUnavailable
 
 

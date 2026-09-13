@@ -6,9 +6,8 @@ from pathlib import Path
 from typing import ClassVar
 
 import httpx
-from fastapi.testclient import TestClient
-
 import job_orchestrator.api as api_module
+from fastapi.testclient import TestClient
 from job_orchestrator.config import Settings
 
 

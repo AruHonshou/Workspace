@@ -2,10 +2,9 @@ from typing import Any, Self
 
 import httpx
 import pytest
-from pydantic import BaseModel, ConfigDict
-
 from job_orchestrator.config import Settings
 from job_orchestrator.providers.ai.deepseek import DeepSeekError, DeepSeekProvider
+from pydantic import BaseModel, ConfigDict
 
 
 class Output(BaseModel):
