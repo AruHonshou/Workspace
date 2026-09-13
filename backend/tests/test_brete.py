@@ -1,6 +1,7 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
+
 from job_orchestrator.connectors.providers import ProviderSearchQuery
 from job_orchestrator.providers.jobs.brete import BreteProvider
 
@@ -23,7 +24,7 @@ def test_brete_parses_public_cards_without_accounts_or_detail_scraping() -> None
     assert jobs[0].country_code == "CR"
     assert jobs[0].source_portal == "Brete"
     assert str(jobs[0].url).startswith("https://ane.cr/Puesto")
-    assert jobs[0].posted_at == datetime(2026, 9, 6, tzinfo=timezone.utc)
+    assert jobs[0].posted_at == datetime(2026, 9, 6, tzinfo=UTC)
 
 
 @pytest.mark.asyncio

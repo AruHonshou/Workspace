@@ -2,6 +2,8 @@ from datetime import timedelta
 from pathlib import Path
 
 import pytest
+from pypdf import PdfReader
+
 from job_orchestrator.api import _normalize_generated_guide_content
 from job_orchestrator.career import build_interview_guide
 from job_orchestrator.documents import (
@@ -18,7 +20,6 @@ from job_orchestrator.schemas import (
     SourceKind,
     utc_now,
 )
-from pypdf import PdfReader
 
 
 def _qa_guide_fixture(language: str) -> tuple[InterviewGuide, JobRecord, Profile]:

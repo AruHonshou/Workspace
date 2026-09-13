@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
+
 from job_orchestrator.ranking import normalize_manual_job
 from job_orchestrator.schemas import (
     ATSResumeVersion,
@@ -18,7 +20,6 @@ from job_orchestrator.schemas import (
     utc_now,
 )
 from job_orchestrator.storage import ProfileDisplayNameConflictError, SQLiteStore
-from pydantic import ValidationError
 
 
 def test_profile_contract_normalizes_preferences_and_validates_filters() -> None:

@@ -21,7 +21,6 @@ def main() -> None:
         settings=Settings(
             data_dir=repo_root / "work" / "contract-export",
             session_token="contract-export-only",
-            checkpoint_backend="memory",
         )
     )
     output = args.output.resolve()

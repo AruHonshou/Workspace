@@ -15,6 +15,7 @@ node_modules/
 frontend/dist/
 frontend/coverage/
 *.tsbuildinfo
+node-compile-cache/
 
 # Runtime data (private and reproducible)
 /data/
@@ -50,10 +51,6 @@ assets/private/
 *.fbx
 *.usd
 *.usdz
-
-# HoloMyth GLBs are blocked until every license gate is documented.
-assets/models/holomyth/*.glb
-!assets/models/holomyth/.gitkeep
 
 # Editors and OS
 .idea/

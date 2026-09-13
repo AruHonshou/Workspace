@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pytest
 from docx import Document
+from pypdf import PdfReader
+
 from job_orchestrator.ats_documents import render_ats_docx, render_ats_pdf
 from job_orchestrator.documents import (
     UnsupportedDocument,
@@ -15,7 +17,6 @@ from job_orchestrator.schemas import (
     ATSResumeLine,
     PrivateContactBlock,
 )
-from pypdf import PdfReader
 
 
 def test_plain_text_extraction() -> None:

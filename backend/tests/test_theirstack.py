@@ -4,6 +4,7 @@ from typing import ClassVar
 
 import httpx
 import pytest
+
 from job_orchestrator.config import Settings
 from job_orchestrator.connectors.providers import (
     JobSearchProvider,

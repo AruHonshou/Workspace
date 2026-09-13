@@ -350,31 +350,38 @@ La capa de IA utiliza un proveedor abstracto. DeepSeek es el proveedor configura
 Workspace/
 |-- backend/
 |   |-- job_orchestrator/
-|   |   |-- api/
-|   |   |-- domain/
+|   |   |-- api.py
+|   |   |-- schemas.py
+|   |   |-- config.py
+|   |   |-- connectors/
 |   |   |-- services/
 |   |   |-- providers/
-|   |   |-- repositories/
-|   |   |-- documents/
-|   |   |-- storage/
+|   |   |-- documents.py
+|   |   |-- ats_documents.py
+|   |   |-- linkedin.py
+|   |   |-- storage.py
 |   |   +-- main.py
-|   +-- tests/
+|   |-- tests/
+|   |-- pyproject.toml
+|   +-- uv.lock
 |-- frontend/
 |   |-- src/
 |   |   |-- app/
 |   |   |-- pages/
-|   |   |-- features/
 |   |   |-- components/
 |   |   |-- api/
+|   |   |-- generated/
 |   |   |-- hooks/
 |   |   +-- styles/
-|   +-- tests/
+|   |-- public/
+|   |-- package.json
+|   +-- vite.config.ts
 |-- scripts/
 |-- docs/
-|-- output/
-|-- pyproject.toml
+|-- assets/
 |-- package.json
-|-- vite.config.ts
+|-- pnpm-lock.yaml
+|-- compose.yaml
 |-- .env.example
 +-- README.md
 ~~~
@@ -384,9 +391,10 @@ La estructura concreta puede evolucionar, pero la separación por dominio debe m
 
 ### Requisitos
 
-- Windows, macOS o Linux.
-- Node.js compatible con el proyecto.
-- Python 3.12 o versión compatible definida por el proyecto.
+- Windows para los scripts PowerShell de desarrollo descritos abajo. También se incluye una configuración Docker Compose.
+- Node.js 22 o superior.
+- pnpm 11.19.0, fijado en package.json.
+- Python 3.12 y uv disponibles en PATH.
 - Git.
 - Una clave de TheirStack para búsqueda de empleos.
 - Una clave de DeepSeek para funciones de IA.
@@ -404,7 +412,7 @@ cd Workspace
 Copy-Item .env.example .env
 ~~~
 
-Edita el archivo .env y agrega las claves necesarias. Nunca publiques ese archivo ni incluyas claves directamente en el código.
+El archivo .env configura el servicio local. Las claves se introducen en Configuración y se guardan en el almacén de credenciales del sistema; Docker también permite inyectarlas mediante variables de entorno. Nunca publiques secretos ni los incluyas directamente en el código.
 
 ### Preparar dependencias
 
@@ -422,16 +430,14 @@ La aplicación queda disponible normalmente en la URL local que indique el scrip
 
 ## Configuración
 
-Las variables de entorno pueden variar según la versión, pero las principales son:
+Las principales opciones del servicio son:
 
 ~~~text
-DEEPSEEK_API_KEY=
-DEEPSEEK_MODEL=
-THEIRSTACK_API_KEY=
-DATABASE_PATH=
-BACKEND_HOST=
-BACKEND_PORT=
-FRONTEND_PORT=
+JOB_ORCHESTRATOR_HOST=127.0.0.1
+JOB_ORCHESTRATOR_PORT=8765
+JOB_ORCHESTRATOR_DATA_DIR=./data
+JOB_ORCHESTRATOR_ARTIFACT_DIR=./artifacts
+JOB_ORCHESTRATOR_DEEPSEEK_MODEL=deepseek-v4-pro
 ~~~
 
 Consulta .env.example antes de añadir nuevas variables.
@@ -519,7 +525,7 @@ Las áreas críticas de prueba son:
 Las respuestas de IA deben validarse con datos sintéticos y casos conocidos para comprobar que no inventan experiencia ni modifican fechas.
 ## Estado del proyecto
 
-La versión publicada en este repositorio representa el Workspace actual antes de una limpieza adicional de archivos antiguos. El objetivo de esta copia es conservar un punto de retorno completo y separado del repositorio histórico de AmeWork.
+Este repositorio contiene el Workspace actual. El commit 9d0df78 conserva el estado previo a la limpieza de archivos obsoletos; el repositorio histórico de AmeWork permanece independiente.
 
 La aplicación ya contiene la base funcional de:
 
@@ -583,5 +589,4 @@ Antes de publicar el proyecto como open source, revisa las licencias de:
 - Assets descargados desde repositorios externos.
 
 Los assets que no tengan una licencia compatible deben reemplazarse o documentarse antes de la publicación pública. La intención del proyecto es utilizar una identidad visual propia y mantener avisos de atribución cuando una licencia lo requiera.
-
 

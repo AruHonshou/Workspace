@@ -1,4 +1,4 @@
-# AmeWork documentation
+# Workspace documentation
 
 Every operational document has an English and a Spanish edition. When a rule
 differs from implementation, the versioned schemas and tests take precedence;
@@ -18,8 +18,9 @@ please open an issue so the documentation can be corrected.
 | Quality gates | [Evaluation](evaluation.md) | [Evaluación](evaluation.es.md) |
 | Common failures | [Troubleshooting](troubleshooting.md) | [Solución de problemas](troubleshooting.es.md) |
 
+The current product overview is the [Workspace README](../README.md).
 The repository intentionally contains no real CV, vacancy archive, generated
-personal guide, model weight, or secret. Examples stay synthetic. The one
-redistributable browser asset is the documented Ame terrarium GLB; its CC BY 4.0
-license, provenance, checksum, and attribution live in `assets/manifest.json`
-and `THIRD_PARTY_ASSETS.md`.
+personal guide, model weight, or secret. Examples stay synthetic. The landing
+uses procedural desk geometry, local SVG artwork and licensed local fonts.
+Provenance and notices live in `assets/manifest.json` and
+`THIRD_PARTY_ASSETS.md`. The retired character model and soundtrack do not ship.

@@ -4,6 +4,8 @@ import time
 from io import BytesIO
 
 from fastapi.testclient import TestClient
+from reportlab.pdfgen.canvas import Canvas
+
 from job_orchestrator.ai_contracts import (
     AIInvocationResult,
     AIOperation,
@@ -37,7 +39,6 @@ from job_orchestrator.services.ai_operations import (
     build_linkedin_optimization_operation,
     run_fit_analysis,
 )
-from reportlab.pdfgen.canvas import Canvas
 
 
 def _complete_linkedin_sections(fact_id: str) -> list[LinkedInSectionProposal]:

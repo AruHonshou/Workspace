@@ -4,6 +4,9 @@
 .uv-cache
 .pnpm-store
 node_modules
+node-compile-cache
+.pytest-tmp-*
+.test-tmp-*
 frontend/node_modules
 frontend/dist
 .local
