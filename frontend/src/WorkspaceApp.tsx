@@ -159,11 +159,20 @@ export default function WorkspaceApp() {
   async function confirmProfile() { if (profile.id) storeProfile(await api.confirmProfile(profile.id)); }
   async function reprocessProfile() { if (profile.id) { storeProfile(await api.reprocessProfile(profile.id)); setNotice(locale === "es" ? "Extracción optimizada. Revisa y confirma nuevamente los hechos profesionales." : "Extraction optimized. Review and confirm the professional facts again."); } }
   async function cloudConsent(granted: boolean) { if (profile.id) storeProfile(await api.decideCloudConsent(profile.id, granted)); }
-  async function importLinkedInFile(file: File, language: string) { if (!profile.id) return; setLinkedInBusy(true); try { const value = await api.importLinkedIn(file, profile.id, language); setLinkedInSnapshot(value); setLinkedInVersions([]); } finally { setLinkedInBusy(false); } }
-  async function importLinkedInText(text: string, language: string) { if (!profile.id) return; setLinkedInBusy(true); try { const value = await api.importLinkedInText(profile.id, language, text); setLinkedInSnapshot(value); setLinkedInVersions([]); } finally { setLinkedInBusy(false); } }
-  async function optimizeLinkedIn(roles: string[], language: string) { if (!linkedInSnapshot) return; setLinkedInBusy(true); try { const value = await api.optimizeLinkedIn(linkedInSnapshot, roles, language); setLinkedInSnapshot(value.snapshot); setLinkedInVersions((current) => [value.version, ...current.filter((item) => item.optimization_id !== value.version.optimization_id)]); } finally { setLinkedInBusy(false); } }
+  function linkedinError(error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/deepseek|linkedin optimization|optimización de linkedin/i.test(message)) {
+      return locale === "es"
+        ? "DeepSeek no pudo completar la optimización de LinkedIn. Puedes intentarlo nuevamente."
+        : "DeepSeek could not complete the LinkedIn optimization. Please try again.";
+    }
+    return message || (locale === "es" ? "No se pudo completar la operación de LinkedIn." : "The LinkedIn operation could not be completed.");
+  }
+  async function importLinkedInFile(file: File, language: string) { if (!profile.id) return; setLinkedInBusy(true); try { const value = await api.importLinkedIn(file, profile.id, language); setLinkedInSnapshot(value); setLinkedInVersions([]); } catch (error) { setNotice(linkedinError(error)); } finally { setLinkedInBusy(false); } }
+  async function importLinkedInText(text: string, language: string) { if (!profile.id) return; setLinkedInBusy(true); try { const value = await api.importLinkedInText(profile.id, language, text); setLinkedInSnapshot(value); setLinkedInVersions([]); } catch (error) { setNotice(linkedinError(error)); } finally { setLinkedInBusy(false); } }
+  async function optimizeLinkedIn(roles: string[], language: string) { if (!linkedInSnapshot) return; setLinkedInBusy(true); try { const value = await api.optimizeLinkedIn(linkedInSnapshot, roles, language); setLinkedInSnapshot(value.snapshot); setLinkedInVersions((current) => [value.version, ...current.filter((item) => item.optimization_id !== value.version.optimization_id)]); } catch (error) { setNotice(linkedinError(error)); } finally { setLinkedInBusy(false); } }
   async function updateLinkedIn(snapshot: LinkedInProfileSnapshot) { const value = await api.updateLinkedInSections(snapshot.snapshot_id, snapshot.sections); setLinkedInSnapshot(value); }
-  async function reparseLinkedIn() { if (!linkedInSnapshot) return; setLinkedInBusy(true); try { const value = await api.reparseLinkedIn(linkedInSnapshot.snapshot_id); setLinkedInSnapshot(value); setNotice(locale === "es" ? "Secciones de LinkedIn reanalizadas localmente." : "LinkedIn sections reparsed locally."); } finally { setLinkedInBusy(false); } }
+  async function reparseLinkedIn() { if (!linkedInSnapshot) return; setLinkedInBusy(true); try { const value = await api.reparseLinkedIn(linkedInSnapshot.snapshot_id); setLinkedInSnapshot(value); setNotice(locale === "es" ? "Secciones de LinkedIn reanalizadas localmente." : "LinkedIn sections reparsed locally."); } catch (error) { setNotice(linkedinError(error)); } finally { setLinkedInBusy(false); } }
 
   function renderView(view: ViewId) {
     if (view === "profile") return <ProfileView profile={profile} profiles={profiles} profileLoadError={profileLoadError} t={t} locale={locale} onReloadProfiles={restoreProfiles} onSelectProfile={selectProfile} onCreateProfile={createProfile} onRenameProfile={renameProfile} onDuplicateProfile={duplicateProfile} onDeleteProfile={deleteProfile} onUpdatePreferences={updatePreferences} onImport={importProfile} onUpdateFact={updateFact} onConfirm={confirmProfile} onReprocess={reprocessProfile} onCloudConsent={cloudConsent} />;

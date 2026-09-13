@@ -58,7 +58,10 @@ OPERATION_PROMPTS: Mapping[AIOperation, str] = {
         "Produce publication-ready LinkedIn copy from the redacted LinkedIn export, "
         "redacted résumé, confirmed records and target roles. Return exactly one proposal "
         "for headline, about, experience, education, skills and certifications, in that "
-        "order. Personal claims require offered record identifiers. Do not include internal "
+        "order. When required_revision is present, return only the sections named there, "
+        "correcting every stated problem. Personal claims require exact offered record "
+        "identifiers from confirmed_records; never create, shorten or alter an identifier. "
+        "Do not include internal "
         "identifiers, contact details or meta commentary in visible text, and never scrape "
         "or automate LinkedIn."
     ),

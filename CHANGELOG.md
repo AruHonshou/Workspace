@@ -2,6 +2,23 @@
 
 Todos los cambios relevantes de Workspace se documentan en este archivo.
 
+## 1.0.1 — 2026-09-13
+
+Actualización correctiva de estabilidad y experiencia de uso para el optimizador de LinkedIn.
+
+### Mejoras
+
+- LinkedIn vuelve a solicitar únicamente las secciones que DeepSeek haya omitido o respaldado con identificadores inválidos.
+- Si el segundo intento tampoco puede validarse, Workspace conserva de forma segura el contenido importado de esa sección sin descartar el resto del perfil.
+- Los errores de importación, análisis estructural y generación se presentan en español o inglés según el idioma de la interfaz.
+- La generación muestra un estado de progreso claro y evita ejecuciones duplicadas mientras está activa.
+- La barra de acciones de LinkedIn mantiene sus controles alineados y adaptables, sin superposiciones del selector de archivos.
+
+### Validación
+
+- Pruebas específicas para recuperación selectiva y respaldo seguro de secciones de LinkedIn.
+- Suite completa de backend y frontend, compilación de producción, validación de estilo, recursos, licencias y secretos.
+
 ## 1.0.0 — 2026-09-13
 
 Primer lanzamiento público estable de Workspace.

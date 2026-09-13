@@ -1893,7 +1893,10 @@ def create_app(
                 extra={"optimization_id": version.optimization_id},
             )
             version.status = GeneratedDocumentStatus.FAILED
-            version.error = "DeepSeek could not complete the LinkedIn optimization"
+            version.error = (
+                "DeepSeek no pudo completar la optimización de LinkedIn. "
+                "Puedes intentarlo nuevamente."
+            )
             store.save_linkedin_optimization(version)
             raise HTTPException(status_code=503, detail=version.error) from exc
         return store.save_linkedin_optimization(version)

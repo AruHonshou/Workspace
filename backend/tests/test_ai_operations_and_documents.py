@@ -366,6 +366,144 @@ def test_linkedin_generation_receives_the_complete_redacted_context() -> None:
     assert len(result["sections"]) == 6
 
 
+def test_linkedin_generation_preserves_sections_when_model_omits_one() -> None:
+    profile = _profile()
+    snapshot = LinkedInProfileSnapshot(
+        profile_id=profile.profile_id,
+        profile_revision=profile.revision,
+        language="en",
+        target_roles=["QA Engineer"],
+        sections=LinkedInSectionInput(
+            headline="QA Engineer",
+            education="Bachelor of Information Systems",
+        ),
+    )
+
+    class PartialRegistry:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def invoke(self, operation: AIOperation, payload: dict):
+            assert operation == AIOperation.LINKEDIN_OPTIMIZATION
+            self.calls += 1
+            fact_id = payload["confirmed_records"][0]["fact_id"]
+            proposal = LinkedInOptimizationProposal(
+                sections=[
+                    LinkedInSectionProposal(
+                        section="headline",
+                        proposed_text="QA Engineer | Playwright",
+                        rationale="Uses confirmed evidence.",
+                        record_ids=[fact_id],
+                    )
+                ]
+            )
+            return AIInvocationResult(
+                content=proposal.model_dump_json(), model="fixture", structured=proposal
+            )
+
+    registry = PartialRegistry()
+    result = build_linkedin_optimization_operation(registry).invoke(
+        {
+            "snapshot": snapshot.model_dump(mode="json"),
+            "profile": profile.model_dump(mode="json"),
+        }
+    )
+
+    assert registry.calls == 2
+    assert result["stage"] == "completed"
+    assert [item["section"] for item in result["sections"]] == [
+        "headline",
+        "about",
+        "experience",
+        "education",
+        "skills",
+        "certifications",
+    ]
+    education = next(
+        item for item in result["sections"] if item["section"] == "education"
+    )
+    assert education["proposed_text"] == "Bachelor of Information Systems"
+    assert any("education" in issue for issue in result["review_issues"])
+
+
+def test_linkedin_generation_retries_only_missing_sections() -> None:
+    profile = _profile()
+    snapshot = LinkedInProfileSnapshot(
+        profile_id=profile.profile_id,
+        profile_revision=profile.revision,
+        language="en",
+        target_roles=["QA Engineer"],
+        sections=LinkedInSectionInput(
+            headline="QA Engineer",
+            education="Bachelor of Information Systems",
+        ),
+    )
+
+    class RevisionRegistry:
+        def __init__(self) -> None:
+            self.payloads: list[dict] = []
+
+        def invoke(self, operation: AIOperation, payload: dict):
+            assert operation == AIOperation.LINKEDIN_OPTIMIZATION
+            self.payloads.append(payload)
+            fact_id = payload["confirmed_records"][0]["fact_id"]
+            requested = payload.get("required_revision", {}).get("sections")
+            if requested:
+                copy = {
+                    "about": "QA professional focused on dependable releases.",
+                    "experience": "Built Playwright regression tests for Acme in 2025.",
+                    "education": "Bachelor of Information Systems with continuous QA learning.",
+                    "skills": "Playwright | regression testing",
+                    "certifications": "Professional learning supported by confirmed records.",
+                }
+                sections = [
+                    LinkedInSectionProposal(
+                        section=section,
+                        proposed_text=copy[section],
+                        rationale="Revised with exact confirmed evidence identifiers.",
+                        record_ids=[fact_id],
+                    )
+                    for section in requested
+                ]
+            else:
+                sections = [
+                    LinkedInSectionProposal(
+                        section="headline",
+                        proposed_text="QA Engineer | Playwright",
+                        rationale="Uses confirmed evidence.",
+                        record_ids=[fact_id],
+                    )
+                ]
+            proposal = LinkedInOptimizationProposal(sections=sections)
+            return AIInvocationResult(
+                content=proposal.model_dump_json(), model="fixture", structured=proposal
+            )
+
+    registry = RevisionRegistry()
+    result = build_linkedin_optimization_operation(registry).invoke(
+        {
+            "snapshot": snapshot.model_dump(mode="json"),
+            "profile": profile.model_dump(mode="json"),
+        }
+    )
+
+    assert len(registry.payloads) == 2
+    assert registry.payloads[1]["required_revision"]["sections"] == [
+        "about",
+        "experience",
+        "education",
+        "skills",
+        "certifications",
+    ]
+    education = next(
+        item for item in result["sections"] if item["section"] == "education"
+    )
+    assert education["proposed_text"].startswith("Bachelor of Information Systems with")
+    assert not any(
+        "contenido importado de education" in issue for issue in result["review_issues"]
+    )
+
+
 def test_resume_translation_workflow_is_not_exposed(client) -> None:
     response = client.post(
         "/api/profiles/profile_missing/resume-translations",

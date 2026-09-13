@@ -324,9 +324,7 @@ def build_ats_resume_operation(ai_client: StructuredAIClient) -> SequentialOpera
                 ),
             },
             "confirmed_records": facts,
-            "redacted_source_resume": _resume_export(
-                profile, detect_job_language(job)
-            ),
+            "redacted_source_resume": _resume_export(profile, detect_job_language(job)),
             "source_structure": _professional_record_export(profile, facts),
             "language": detect_job_language(job),
             "document_goal": (
@@ -344,7 +342,10 @@ def build_ats_resume_operation(ai_client: StructuredAIClient) -> SequentialOpera
         )
         if proposal is None:
             raise RuntimeError("DeepSeek did not return a structured ATS résumé")
-        if proposal.language.split("-", 1)[0] != detect_job_language(job).split("-", 1)[0]:
+        if (
+            proposal.language.split("-", 1)[0]
+            != detect_job_language(job).split("-", 1)[0]
+        ):
             raise RuntimeError("DeepSeek returned the ATS résumé in the wrong language")
         document, issues = build_ats_document(profile, job, proposal)
         quality_issues = ats_adaptation_issues(document, job)
@@ -419,18 +420,16 @@ def build_linkedin_optimization_operation(
             for key in SECTION_KEYS
             if current.get(key)
         )
-        response = ai_client.invoke(
-            AIOperation.LINKEDIN_OPTIMIZATION,
-            {
-                "current_sections": current,
-                "linkedin_export_text": source_text,
-                "resume_export_text": _resume_export(profile, snapshot.language),
-                "target_roles": snapshot.target_roles,
-                "profile_context": _profile_context(profile, snapshot),
-                "confirmed_records": facts,
-                "language": snapshot.language,
-            },
-        )
+        payload = {
+            "current_sections": current,
+            "linkedin_export_text": source_text,
+            "resume_export_text": _resume_export(profile, snapshot.language),
+            "target_roles": snapshot.target_roles,
+            "profile_context": _profile_context(profile, snapshot),
+            "confirmed_records": facts,
+            "language": snapshot.language,
+        }
+        response = ai_client.invoke(AIOperation.LINKEDIN_OPTIMIZATION, payload)
         proposal = (
             response.structured
             if isinstance(response.structured, LinkedInOptimizationProposal)
@@ -442,38 +441,116 @@ def build_linkedin_optimization_operation(
         evidence_by_id = {item["fact_id"]: item["text"] for item in facts}
         by_key: dict[str, LinkedInOptimizationSection] = {}
         issues: list[str] = []
-        for item in proposal.sections:
-            if item.section in by_key or not set(item.record_ids).issubset(offered):
-                issues.append(f"Unsafe or repeated proposal for {item.section}.")
-                continue
-            proposed = _strip_internal_markers(item.proposed_text)
-            rationale = _strip_internal_markers(item.rationale)
-            current_text = str(current.get(item.section, ""))
-            by_key[item.section] = LinkedInOptimizationSection(
-                section=item.section,
-                current_text=current_text,
-                proposed_text=proposed or current_text,
-                rationale=rationale or "Uses only confirmed profile evidence.",
-                keywords=[
-                    value
-                    for value in item.keywords
-                    if not _REFERENCE_TOKEN_RE.search(value)
-                    and not _INTERNAL_ID_RE.search(value)
-                ],
-                record_ids=item.record_ids,
-                evidence=[
-                    evidence_by_id[value]
-                    for value in item.record_ids
-                    if value in evidence_by_id
-                ],
-            )
+        rejected: dict[str, list[str]] = {}
+
+        def accept_sections(
+            candidate: LinkedInOptimizationProposal,
+            allowed_sections: set[str],
+        ) -> None:
+            for item in candidate.sections:
+                if item.section not in allowed_sections:
+                    continue
+                reasons: list[str] = []
+                if item.section in by_key:
+                    reasons.append("sección repetida")
+                unknown_ids = sorted(set(item.record_ids) - offered)
+                if unknown_ids:
+                    reasons.append("identificadores de evidencia no ofrecidos")
+                if reasons:
+                    rejected.setdefault(item.section, []).extend(reasons)
+                    continue
+                proposed = _strip_internal_markers(item.proposed_text)
+                rationale = _strip_internal_markers(item.rationale)
+                current_text = str(current.get(item.section, ""))
+                by_key[item.section] = LinkedInOptimizationSection(
+                    section=item.section,
+                    current_text=current_text,
+                    proposed_text=proposed or current_text,
+                    rationale=rationale or "Uses only confirmed profile evidence.",
+                    keywords=[
+                        value
+                        for value in item.keywords
+                        if not _REFERENCE_TOKEN_RE.search(value)
+                        and not _INTERNAL_ID_RE.search(value)
+                    ],
+                    record_ids=item.record_ids,
+                    evidence=[
+                        evidence_by_id[value]
+                        for value in item.record_ids
+                        if value in evidence_by_id
+                    ],
+                )
+
+        accept_sections(proposal, set(SECTION_KEYS))
+        missing = [key for key in SECTION_KEYS if key not in by_key]
+        if missing:
+            try:
+                revision_response = ai_client.invoke(
+                    AIOperation.LINKEDIN_OPTIMIZATION,
+                    {
+                        **payload,
+                        "previous_proposal": proposal.model_dump(mode="json"),
+                        "required_revision": {
+                            "sections": missing,
+                            "problems": {
+                                key: rejected.get(key, ["sección ausente"])
+                                for key in missing
+                            },
+                            "instruction": (
+                                "Return only the requested missing sections. Use exact "
+                                "fact_id values copied from confirmed_records for every "
+                                "personal claim. Do not repeat accepted sections."
+                            ),
+                        },
+                    },
+                )
+                revision = (
+                    revision_response.structured
+                    if isinstance(
+                        revision_response.structured, LinkedInOptimizationProposal
+                    )
+                    else None
+                )
+                if revision is not None:
+                    accept_sections(revision, set(missing))
+            except RuntimeError:
+                issues.append(
+                    "No se pudo completar la segunda validación de algunas secciones."
+                )
+        for key, reasons in rejected.items():
+            if key not in by_key:
+                issues.append(
+                    f"Se descartó la propuesta de {key}: {', '.join(dict.fromkeys(reasons))}."
+                )
         sections: list[LinkedInOptimizationSection] = []
+        fallback_rationale = (
+            "Se conservó el contenido importado porque no se pudo validar una propuesta segura."
+            if snapshot.language.split("-", 1)[0] == "es"
+            else "Imported content was preserved because a safe proposal could not be validated."
+        )
         for key in SECTION_KEYS:
             if key in by_key:
                 sections.append(by_key[key])
             else:
-                raise RuntimeError(
-                    f"DeepSeek did not produce a safe {key} LinkedIn section"
+                # A model can omit or fail validation for one section (education
+                # is especially common when an export does not contain it). Do
+                # not discard the complete profile in that case. Preserve the
+                # user's imported text so the result remains useful and never
+                # invents a replacement claim.
+                current_text = str(current.get(key, ""))
+                sections.append(
+                    LinkedInOptimizationSection(
+                        section=key,
+                        current_text=current_text,
+                        proposed_text=current_text,
+                        rationale=fallback_rationale,
+                        keywords=[],
+                        record_ids=[],
+                        evidence=[],
+                    )
+                )
+                issues.append(
+                    f"Se conservó el contenido importado de {key} por seguridad."
                 )
         return {
             **state,

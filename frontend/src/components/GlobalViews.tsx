@@ -377,14 +377,14 @@ export function LinkedInView({
                   language,
                 )
               }
-            >
+              >
               {busy
-                ? "…"
+                ? <><span className="linkedin-button-spinner" aria-hidden="true" />{locale === "es" ? "Generando…" : "Generating…"}</>
                 : locale === "es"
                   ? "Generar perfil"
                   : "Generate profile"}
             </button>
-            <label className="linkedin-reimport">
+            <label className={`linkedin-reimport${busy ? " is-disabled" : ""}`} aria-disabled={busy}>
               {locale === "es" ? "Importar otro PDF" : "Import another PDF"}
               <input
                 type="file"
