@@ -12,6 +12,7 @@ import { DeskLamp, DeskNotebook, DeskCoffee, DeskMouse, DESK_ACCESSORY_ANCHORS }
 import { DeskPlant } from "./DeskPlants";
 import { createDeskTexture, DeskContactShadows, DeskEnvironment } from "./DeskAtmosphere";
 import { monitorCorners, projectDeskPoint, quadTransform } from "./deskProjection";
+import { publicAsset } from "../app/publicAsset";
 
 export type DeskSceneProps = {
   phase: DeskPhase;
@@ -243,7 +244,7 @@ export function DeskScene(props: DeskSceneProps) {
     ? "Vista en primera persona del escritorio, monitor ultrapanorámico, teclado y plantas"
     : "First-person workspace with an ultrawide monitor, keyboard and plants";
   return <section className={`desk-scene desk-scene--${phase}`} aria-label={description}>
-    {!available ? <img className="desk-scene-fallback" src="/branding/desk-fallback.svg" alt={description} /> : <DeskBoundary onUnavailable={() => setAvailable(false)}>
+    {!available ? <img className="desk-scene-fallback" src={publicAsset("branding/desk-fallback.svg")} alt={description} /> : <DeskBoundary onUnavailable={() => setAvailable(false)}>
       <Canvas
         className="desk-scene-canvas"
         camera={{ position: deskCameraFrame(phase === "working" ? 1 : 0, 1.7).position, fov: DESK_CAMERA_FOV, near: 0.025, far: 70 }}

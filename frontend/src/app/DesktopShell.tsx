@@ -7,6 +7,7 @@ import { WorkspaceIcon } from "./WorkspaceIcon";
 import { useDeskTransition, useReducedMotion } from "./useDeskTransition";
 import { clampDeskLook, type DeskLook } from "../components/deskSceneCamera";
 import { DESK_IDENTITY } from "../data/deskIdentity";
+import { publicAsset } from "./publicAsset";
 
 const DeskScene = lazy(() => import("../components/DeskScene").then(module => ({ default: module.DeskScene })));
 
@@ -16,7 +17,7 @@ class GraphicsBoundary extends Component<{ children: ReactNode; onUnavailable: (
   componentDidCatch() { this.props.onUnavailable(); }
   render() {
     return this.state.failed
-      ? <img className="desk-scene-fallback" src="/branding/desk-fallback.svg" alt="" />
+      ? <img className="desk-scene-fallback" src={publicAsset("branding/desk-fallback.svg")} alt="" />
       : this.props.children;
   }
 }
@@ -122,7 +123,7 @@ export function DesktopShell({ locale, onLocaleChange, renderView, notice, onDis
         if (direction) { event.preventDefault(); changeLook(direction[0], direction[1]); }
         else if (event.key === "Home" || event.key === "Escape") { event.preventDefault(); resetLook(); }
       }}>
-      <GraphicsBoundary onUnavailable={onUnavailable}><Suspense fallback={<div className="desk-scene-fallback"><img src="/branding/desk-fallback.svg" alt="" /></div>}>
+      <GraphicsBoundary onUnavailable={onUnavailable}><Suspense fallback={<div className="desk-scene-fallback"><img src={publicAsset("branding/desk-fallback.svg")} alt="" /></div>}>
         <DeskScene phase={phase} reducedMotion={reducedMotion || staticView} locale={locale} onSettled={settle} onUnavailable={onUnavailable}
           onReady={onSceneReady} screenElement={screenElement} look={look} requestFrame={requestFrame} hotspots={{ linkedin: linkedinHotspot, github: githubHotspot, portfolio: portfolioHotspot }} />
       </Suspense></GraphicsBoundary>
@@ -131,7 +132,7 @@ export function DesktopShell({ locale, onLocaleChange, renderView, notice, onDis
     <div className="desktop-home-layer" inert={!homeVisible} aria-hidden={!homeVisible}>
       <header className="desktop-header">
         <Link to="/" className="workspace-brand" aria-label={es ? "Workspace, inicio" : "Workspace, home"}>
-          <img src="/branding/workspace-mark.svg" width="34" height="34" alt="" />
+          <img src={publicAsset("branding/workspace-mark.svg")} width="34" height="34" alt="" />
           <span>Workspace<small>{es ? "TU ESPACIO PROFESIONAL" : "YOUR CAREER SPACE"}</small></span>
         </Link>
         <div className="desktop-header-tools">
@@ -179,7 +180,7 @@ export function DesktopShell({ locale, onLocaleChange, renderView, notice, onDis
           <button type="button" className="workspace-language" onClick={onLocaleChange} aria-label={es ? "Cambiar a inglés" : "Switch to Spanish"}>{es ? "EN" : "ES"}</button>
         </div>
         <div className="browser-location-row">
-          <span className="browser-mini-mark"><img src="/branding/workspace-mark.svg" width="18" height="18" alt="" />Workspace</span>
+          <span className="browser-mini-mark"><img src={publicAsset("branding/workspace-mark.svg")} width="18" height="18" alt="" />Workspace</span>
           <div className="browser-location" aria-label={es ? "Ubicación actual" : "Current location"}><WorkspaceIcon name="lock" /><span>workspace</span><span className="browser-location-separator">/</span><strong>{activeLabel}</strong></div>
           <span className="browser-local-status"><i />{es ? "Aplicación local" : "Local application"}</span>
         </div>

@@ -15,6 +15,7 @@ import type {
 } from "../types";
 
 const DEFAULT_API_BASE_URL = "";
+export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
 import type { components } from "../generated/api";
 export type SimpleSearchResult = Required<components["schemas"]["SearchResult"]>;
 export type SimpleSearchInput = components["schemas"]["JobSearchInput"];
@@ -40,6 +41,7 @@ function resetSession(): void {
 }
 
 export function initializeSession(config: ApiConfig = apiConfig): Promise<void> {
+  if (DEMO_MODE) return Promise.resolve();
   if (config.sessionToken) return Promise.resolve();
   if (!sessionPromise) {
     sessionPromise = fetch(`${config.baseUrl}/api/session`, {
@@ -73,6 +75,10 @@ function authHeaders(config: ApiConfig): HeadersInit {
 
 async function request<T>(config: ApiConfig, path: string, init: RequestInit = {}, retried = false): Promise<T> {
   await initializeSession(config);
+  if (DEMO_MODE) {
+    const { handleDemoRequest } = await import("../demo/demoApi");
+    return handleDemoRequest<T>(path, init);
+  }
   const headers = new Headers({ Accept: "application/json", ...authHeaders(config), ...init.headers });
   if (init.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -395,6 +401,7 @@ export const api = {
   },
 
   savedJobGuideUrl(savedId: string, profileId: string, disposition: "inline" | "attachment" = "attachment"): string {
+    if (DEMO_MODE) return "https://github.com/AruHonshou/Workspace#demo-visual";
     return `${apiConfig.baseUrl}/api/saved-jobs/${encodeURIComponent(savedId)}/interview-guides/${encodeURIComponent(profileId)}/document.pdf?disposition=${disposition}`;
   },
   prepareSavedJobResume(savedId: string, profileId: string, regenerate = false): Promise<ATSResumeVersion> {
@@ -569,6 +576,7 @@ export const api = {
   },
 
   atsResumeUrl(resumeId: string, format: "pdf" | "docx"): string {
+    if (DEMO_MODE) return "https://github.com/AruHonshou/Workspace#demo-visual";
     return `${apiConfig.baseUrl}/api/ats-resumes/${encodeURIComponent(resumeId)}.${format}`;
   },
 

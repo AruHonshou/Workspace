@@ -35,7 +35,7 @@ describe("offline asset boundary", () => {
       expect(svg).not.toMatch(/(?:href|src)\s*=\s*["'][^#"'\s]|url\(\s*["']?[^#"')\s]/i);
     }
     const html = readFileSync(resolve(process.cwd(), "index.html"), "utf8");
-    expect(html).toContain('href="/branding/workspace-mark.svg"');
+    expect(html).toContain('href="%BASE_URL%branding/workspace-mark.svg"');
     expect(html).toContain("<title>Workspace · Espacio profesional</title>");
   });
 

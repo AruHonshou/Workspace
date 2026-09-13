@@ -1,5 +1,59 @@
 /* Internal Workspace design system. Structural layout and all behavior stay in
    the existing components. No home/Three.js selectors or global element resets. */
+.workspace-demo-banner {
+  position: fixed;
+  z-index: 100000;
+  right: 18px;
+  bottom: 18px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 14px;
+  max-width: min(620px, calc(100vw - 36px));
+  padding: 10px 12px;
+  border: 1px solid rgba(124, 202, 189, .52);
+  border-radius: 14px;
+  color: #eaf7f3;
+  background: rgba(17, 51, 46, .94);
+  box-shadow: 0 14px 38px rgba(4, 30, 27, .2);
+  backdrop-filter: blur(14px);
+  font-family: var(--font-body);
+}
+.workspace-demo-banner strong { font-size: 11px; letter-spacing: .14em; color: #91d8ca; }
+.workspace-demo-banner span { font-size: 13px; }
+.workspace-demo-banner a { color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; }
+.workspace-demo-banner a:hover { color: #a8e6da; }
+@media (max-width: 620px) {
+  .workspace-demo-banner { left: 12px; right: 12px; bottom: 12px; grid-template-columns: 1fr auto; }
+  .workspace-demo-banner span { grid-column: 1 / -1; grid-row: 2; }
+}
+.workspace-demo-banner {
+  position: fixed;
+  z-index: 100000;
+  right: 18px;
+  bottom: 18px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 14px;
+  max-width: min(620px, calc(100vw - 36px));
+  padding: 10px 12px;
+  border: 1px solid rgba(124, 202, 189, .52);
+  border-radius: 14px;
+  color: #eaf7f3;
+  background: rgba(17, 51, 46, .94);
+  box-shadow: 0 14px 38px rgba(4, 30, 27, .2);
+  backdrop-filter: blur(14px);
+  font-family: var(--font-body);
+}
+.workspace-demo-banner strong { font-size: 11px; letter-spacing: .14em; color: #91d8ca; }
+.workspace-demo-banner span { font-size: 13px; }
+.workspace-demo-banner a { color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; }
+.workspace-demo-banner a:hover { color: #a8e6da; }
+@media (max-width: 620px) {
+  .workspace-demo-banner { left: 12px; right: 12px; bottom: 12px; grid-template-columns: 1fr auto; }
+  .workspace-demo-banner span { grid-column: 1 / -1; grid-row: 2; }
+}
 .browser-workspace, .filter-menu, .country-options, .profile-dialog, .app-toast {
   --display: var(--font-heading); --ink: var(--text-primary); --muted: var(--text-secondary);
   --paper: var(--surface); --ivory: var(--bg-app); --cream: var(--surface-secondary);

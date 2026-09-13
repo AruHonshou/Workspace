@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { api, applyLinkedInOptimization, type BackendProfile } from "./api/client";
+import { api, applyLinkedInOptimization, DEMO_MODE, type BackendProfile } from "./api/client";
 import { DesktopShell } from "./app/DesktopShell";
 import { ProfileView, SettingsView } from "./components/DashboardViews";
 import { LinkedInView } from "./components/GlobalViews";
@@ -188,6 +188,13 @@ export default function WorkspaceApp() {
       onDeleteData={async () => { await api.deleteLocalData(); window.location.reload(); }} />;
   }
 
-  return <DesktopShell locale={locale} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")}
-    renderView={renderView} notice={notice} onDismissNotice={() => setNotice(null)} />;
+  return <>
+    {DEMO_MODE && <aside className="workspace-demo-banner" role="status">
+      <strong>{locale === "es" ? "DEMO VISUAL" : "VISUAL DEMO"}</strong>
+      <span>{locale === "es" ? "Datos ficticios · sin backend · no consume API keys" : "Sample data · no backend · no API keys used"}</span>
+      <a href="https://github.com/AruHonshou/Workspace" target="_blank" rel="noopener noreferrer">{locale === "es" ? "Instalar Workspace ↗" : "Install Workspace ↗"}</a>
+    </aside>}
+    <DesktopShell locale={locale} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")}
+      renderView={renderView} notice={notice} onDismissNotice={() => setNotice(null)} />
+  </>;
 }

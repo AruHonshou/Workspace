@@ -8,6 +8,12 @@ Workspace es una aplicación gratuita y de código abierto que ejecutas en tu eq
 
 **Tú controlas tus datos y utilizas tus propias API keys.** Workspace no cobra por utilizar la aplicación. TheirStack y DeepSeek pueden cobrar por el uso de sus servicios según la cuenta y el plan de cada usuario.
 
+## Demo visual
+
+Puedes recorrer la interfaz pública en **[Workspace Demo](https://aruhonshou.github.io/Workspace/)** sin instalar dependencias ni configurar API keys.
+
+La demo utiliza exclusivamente perfiles, vacantes, candidaturas y resultados de IA ficticios. Permite conocer la escena 3D, la navegación y el diseño de todos los módulos, pero no conecta con el backend, no realiza búsquedas reales, no consume créditos y no genera documentos descargables. Para utilizar Workspace con tus propios datos instala la aplicación local siguiendo esta guía.
+
 ## Qué puedes hacer
 
 | Apartado | Para qué sirve |
@@ -257,12 +263,14 @@ La interfaz utiliza React, TypeScript, Vite, React Router y Three.js. La API est
 | Carpeta | Contenido |
 | --- | --- |
 | frontend/src | Interfaz, páginas, escena, estilos y pruebas del navegador. |
+| frontend/src/demo | Datos ficticios y adaptador local utilizados únicamente por la demo visual. |
 | frontend/public | Fuentes y recursos visuales locales. |
 | backend/job_orchestrator | API, modelos, almacenamiento, proveedores y servicios. |
 | backend/tests | Pruebas de API, perfiles, documentos, búsqueda e IA. |
 | scripts | Instalación, ejecución, diagnóstico y validación. |
 | assets | Manifiesto de recursos visuales. |
 | docs | Documentación técnica y de operación. |
+| .github/workflows | Validaciones automáticas y publicación de la demo en GitHub Pages. |
 
 ### Comprobar cambios
 
@@ -274,6 +282,12 @@ La interfaz utiliza React, TypeScript, Vite, React Router y Three.js. La API est
 ~~~
 
 Las pruebas utilizan datos sintéticos y proveedores simulados. No requieren tus claves ni consumen créditos reales.
+
+La versión estática que publica GitHub Pages se puede comprobar localmente con:
+
+~~~powershell
+pnpm --dir frontend build --mode demo
+~~~
 
 Consulta la [documentación](docs/README.md), la [guía de contribución](CONTRIBUTING.md) y la [política de seguridad](SECURITY.md).
 
