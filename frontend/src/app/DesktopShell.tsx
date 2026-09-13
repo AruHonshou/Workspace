@@ -7,8 +7,6 @@ import { WorkspaceIcon } from "./WorkspaceIcon";
 import { useDeskTransition, useReducedMotion } from "./useDeskTransition";
 import { clampDeskLook, type DeskLook } from "../components/deskSceneCamera";
 import { DESK_IDENTITY } from "../data/deskIdentity";
-import { useWorkspaceTheme } from "./useWorkspaceTheme";
-import { ThemeToggle } from "./ThemeToggle";
 
 const DeskScene = lazy(() => import("../components/DeskScene").then(module => ({ default: module.DeskScene })));
 
@@ -29,7 +27,6 @@ export function DesktopShell({ locale, onLocaleChange, renderView, notice, onDis
 }) {
   const location = useLocation();
   const es = locale === "es";
-  const { theme, toggleTheme } = useWorkspaceTheme();
   const atHome = location.pathname === "/";
   const activePanel = panelFromLocation(location);
   const reducedMotion = useReducedMotion();
@@ -138,7 +135,6 @@ export function DesktopShell({ locale, onLocaleChange, renderView, notice, onDis
           <span>Workspace<small>{es ? "TU ESPACIO PROFESIONAL" : "YOUR CAREER SPACE"}</small></span>
         </Link>
         <div className="desktop-header-tools">
-          <ThemeToggle locale={locale} theme={theme} onClick={toggleTheme} />
           <button type="button" className="desktop-motion" aria-label={es ? "Animaciones de cámara" : "Camera animations"} aria-pressed={!staticView && !reducedMotion} onClick={toggleStaticView}
             title={es ? "Activar o desactivar las transiciones de cámara" : "Enable or disable camera transitions"}>
             <WorkspaceIcon name="motion" /><span>{es ? (staticView || reducedMotion ? "Sin animaciones" : "Animaciones") : (staticView || reducedMotion ? "Motion off" : "Motion on")}</span>

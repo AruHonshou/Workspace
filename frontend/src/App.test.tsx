@@ -12,6 +12,7 @@ describe("Personal job assistant", () => {
     expect(screen.getByRole("heading", { name: "Un espacio para lo que sigue." })).toBeInTheDocument();
     expect(container.querySelector("audio")).toBeNull();
     expect(screen.queryByRole("button", { name: /Entrar a/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Activar modo oscuro" })).not.toBeInTheDocument();
     expect(play).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "Animaciones de cámara" }));
     expect(localStorage.getItem("workspace-static-view")).toBe("true");
