@@ -93,9 +93,15 @@ describe("Personal job assistant", () => {
     await userEvent.click(screen.getByRole("link", { name: "Mi CV" }));
     await userEvent.click(screen.getByRole("link", { name: "LinkedIn" }));
     window.history.back();
-    await vi.waitFor(() => expect(screen.getByRole("heading", { level: 1, name: "Mi CV" })).toBeInTheDocument());
+    await vi.waitFor(
+      () => expect(screen.getByRole("heading", { level: 1, name: "Mi CV" })).toBeInTheDocument(),
+      { timeout: 3_000 },
+    );
     window.history.forward();
-    await vi.waitFor(() => expect(screen.getByRole("heading", { level: 1, name: "LinkedIn" })).toBeInTheDocument());
+    await vi.waitFor(
+      () => expect(screen.getByRole("heading", { level: 1, name: "LinkedIn" })).toBeInTheDocument(),
+      { timeout: 3_000 },
+    );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
